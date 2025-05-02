@@ -1,0 +1,1861 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ניחוש אות ראשונה ואחרונה (ציונים גבוהים)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        /* Custom styles */
+        body {
+            font-family: 'Assistant', 'Inter', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            overflow-y: auto;
+            background-color: #f0f4f8;
+            position: relative;
+            min-height: 100vh;
+            padding-top: 70px; /* Add padding for fixed header */
+        }
+
+        /* --- Header and Navigation --- */
+        #main-header {
+            position: fixed; /* Keep header fixed at the top */
+            top: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent white */
+            backdrop-filter: blur(8px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            z-index: 1000; /* Ensure header is on top */
+        }
+
+        #hamburger-button {
+            display: none; /* Hidden by default, shown on mobile */
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+            z-index: 1002; /* Ensure hamburger is above transparent menu */
+        }
+         #hamburger-button svg {
+             width: 28px;
+             height: 28px;
+             fill: #334155;
+         }
+
+        #main-nav {
+            display: flex; /* Visible by default on desktop */
+            gap: 20px;
+        }
+         #main-nav a {
+             text-decoration: none;
+             color: #3b82f6;
+             font-weight: 600;
+             padding: 5px 0;
+             border-bottom: 2px solid transparent;
+             transition: border-color 0.2s ease;
+         }
+         #main-nav a:hover, #main-nav a.active {
+             border-bottom-color: #3b82f6;
+         }
+
+        /* Mobile Navigation Menu (Hidden by default) */
+        #mobile-nav-menu {
+            display: none;
+            position: fixed;
+            top: 60px; /* Below header */
+            left: 0;
+            width: 100%;
+            background-color: transparent;
+            z-index: 999; /* Below header */
+            padding: 15px 0;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        #mobile-nav-menu.visible {
+            display: flex;
+        }
+         #mobile-nav-menu a {
+             text-decoration: none;
+             color: #3b82f6;
+             font-weight: 600;
+             font-size: 1.1rem;
+             padding: 10px 20px;
+             width: 80%; /* Give links some width */
+             max-width: 300px;
+             text-align: center;
+             background-color: rgba(255, 255, 255, 0.9); /* Add slight background to links */
+             border-radius: 8px;
+             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+         }
+         #mobile-nav-menu a:hover {
+             background-color: #eef2ff; /* Light blue hover */
+         }
+
+
+        /* --- Page Containers --- */
+        main {
+            display: none; /* Hide pages by default */
+            width: 100%;
+        }
+        main.active {
+            display: block; /* Show active page */
+        }
+
+        .page-container { /* Generic container for padding */
+             padding: 20px;
+             max-width: 800px;
+             margin: 0 auto;
+        }
+
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 20px 20px 150px 20px; /* Adjust padding */
+            position: relative;
+        }
+        .about-container {
+             padding: 40px 20px;
+             background-color: #fff;
+             border-radius: 16px;
+             box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+             min-height: calc(100vh - 150px); /* Example height */
+        }
+         .about-container h1, .high-scores-container h1 {
+             font-size: 2rem;
+             font-weight: bold;
+             color: #1e293b;
+             margin-bottom: 20px;
+             text-align: center;
+         }
+         .about-container p {
+             font-size: 1.1rem;
+             color: #475569;
+             line-height: 1.6;
+             text-align: center;
+         }
+
+        /* High Scores Styles */
+        .high-scores-container {
+            padding: 30px 20px;
+            background-color: #fff;
+            border-radius: 16px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            min-height: calc(100vh - 150px);
+        }
+        #high-scores-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .score-entry {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            background-color: #f8fafc;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            border: 1px solid #e2e8f0;
+            gap: 10px;
+        }
+        .score-entry .rank {
+            font-weight: bold;
+            color: #64748b;
+            min-width: 30px;
+            text-align: left; /* Rank on the left in RTL */
+        }
+        .score-entry .player-name {
+            flex-grow: 1;
+            color: #334155;
+            text-align: right; /* Name on the right in RTL */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .score-entry .score-value {
+            font-weight: bold;
+            color: #0f172a;
+            min-width: 40px;
+            text-align: left; /* Score on the left */
+            white-space: nowrap; /* Prevent wrapping */
+        }
+        /* Special styles for top 3 */
+        .score-entry.rank-1 {
+            background-color: #fef9c3; border-color: #facc15;
+        }
+        .score-entry.rank-1 .rank, .score-entry.rank-1 .score-value, .score-entry.rank-1 .player-name {
+            color: #ca8a04; font-size: 1.2rem;
+        }
+        .score-entry.rank-2 {
+            background-color: #f1f5f9; border-color: #94a3b8;
+        }
+        .score-entry.rank-2 .rank, .score-entry.rank-2 .score-value, .score-entry.rank-2 .player-name {
+            color: #475569; font-size: 1.15rem;
+        }
+        .score-entry.rank-3 {
+            background-color: #fff7ed; border-color: #fb923c;
+        }
+        .score-entry.rank-3 .rank, .score-entry.rank-3 .score-value, .score-entry.rank-3 .player-name {
+            color: #ea580c; font-size: 1.12rem;
+        }
+        #no-scores-message {
+            text-align: center;
+            color: #64748b;
+            margin-top: 30px;
+            font-style: italic;
+        }
+
+
+        /* Card styling */
+        .word-card {
+            width: 90%;
+            max-width: 700px;
+            height: 300px;
+            background-color: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid #e2e8f0;
+            padding: 10px;
+            transition: box-shadow 0.3s ease-out;
+        }
+
+        /* Correct Word Overlay */
+        .correct-word-overlay {
+            position: absolute;
+            top: 10px;
+            left: 10px; /* Keep left for RTL positioning */
+            /* --- MODIFIED: Darker background, white text --- */
+            background-color: rgba(0, 0, 0, 0.75); /* Darker semi-transparent black */
+            color: white; /* White text */
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            z-index: 10; /* Above image/text */
+            display: none; /* Hidden by default */
+        }
+
+        /* Image display styling */
+        .image-display {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            display: none;
+            animation-duration: 0.8s;
+            animation-fill-mode: both;
+        }
+
+        /* Text display styling */
+        .text-display {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #334155;
+            text-align: center;
+            padding: 20px;
+            display: none;
+            animation-duration: 0.8s;
+            animation-fill-mode: both;
+            max-width: 100%;
+            word-wrap: break-word;
+        }
+        .text-display.fallback {
+             font-size: 1.5rem;
+             color: #94a3b8;
+             font-weight: normal;
+        }
+
+
+        /* Guess area styling - Container */
+        .guess-area {
+            width: 90%;
+            max-width: 700px;
+            min-height: 50px;
+            background-color: #e2e8f0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0.3em;
+            padding: 10px 15px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
+            margin-bottom: 25px;
+            cursor: pointer;
+        }
+
+        /* Individual guess slot styling */
+        .guess-slot {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.5em;
+            height: 1.5em;
+            font-size: 24px;
+            font-family: monospace;
+            color: #1e293b;
+            background-color: #cbd5e1;
+            border-radius: 4px;
+            text-align: center;
+            line-height: 1.5em;
+            transition: background-color 0.2s ease, border 0.2s ease;
+            border: 2px solid transparent;
+        }
+
+        /* Highlight style for the active guessing slot (blinking) */
+        .guess-slot.active-guess {
+            border: 2px solid transparent;
+            background-color: #eff6ff;
+            animation: blinking-border 1s infinite;
+        }
+        /* Blinking border animation */
+        @keyframes blinking-border {
+            0%, 100% { border-color: #86efac; }
+            50% { border-color: transparent; }
+        }
+
+        /* Feedback colors */
+         .guess-slot.correct {
+            background-color: #86efac;
+            animation: none;
+            border-color: transparent;
+        }
+         .guess-slot.incorrect {
+             background-color: #fca5a5;
+             animation: none;
+             border-color: transparent;
+        }
+
+        /* Visually hidden input field to trigger keyboard */
+        .hidden-input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+            width: 1px;
+            height: 1px;
+            left: -9999px;
+        }
+
+        /* --- On-Screen Keyboard --- */
+        #keyboard-area {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            width: 100%;
+            max-width: 700px;
+            padding: 10px;
+            margin-top: 10px;
+            position: fixed;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(240, 244, 248, 0.9);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 50;
+        }
+         .keyboard-row {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            width: 100%;
+        }
+        #keyboard-area.visible {
+             display: flex;
+        }
+        #keyboard-area button {
+            font-family: 'Inter', sans-serif;
+            font-weight: bold;
+            font-size: 1.1rem;
+            flex-grow: 1;
+            flex-basis: 0;
+            max-width: 45px;
+            height: 45px;
+            border: none;
+            border-radius: 6px;
+            background-color: #ffffff;
+            color: #334155;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: background-color 0.15s ease, transform 0.1s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 5px;
+        }
+        #keyboard-area button:active {
+            background-color: #e2e8f0;
+            transform: scale(0.95);
+        }
+        .key-highlight {
+            background-color: #f9a8d4 !important;
+            transition: background-color 0.3s ease;
+        }
+
+
+        /* --- RESPONSIVE STYLES for Mobile --- */
+        @media (max-width: 640px) {
+             #hamburger-button {
+                 display: block;
+             }
+             #main-nav {
+                 display: none;
+             }
+
+            .game-container {
+                 padding-top: 20px;
+            }
+            .word-card {
+                max-width: 330px;
+                height: 250px;
+            }
+            .guess-area {
+                max-width: 330px;
+                gap: 0.2em;
+            }
+             .guess-slot {
+                 font-size: 20px;
+            }
+            .text-display {
+                 font-size: 2.5rem;
+            }
+             .score-display {
+                font-size: 30px;
+                top: 10px;
+                right: 10px;
+                margin-top: 0;
+                margin-right: 0;
+            }
+             #sound-toggle-button {
+                 top: 40px;
+                 left: 20px;
+                 width: 36px;
+                 height: 36px;
+             }
+             #sound-toggle-button svg {
+                 width: 20px;
+                 height: 20px;
+             }
+
+            .prompt {
+                font-size: 1rem;
+            }
+            /* Keyboard adjustments for mobile */
+             #keyboard-area {
+                 max-width: 100%;
+                 gap: 4px;
+                 padding: 10px 5px;
+                 bottom: 5px;
+            }
+             .keyboard-row {
+                 gap: 4px;
+             }
+             #keyboard-area button {
+                 height: 40px;
+                 font-size: 1rem;
+                 max-width: 40px;
+                 padding: 0 3px;
+            }
+            .about-container, .high-scores-container {
+                padding: 20px 15px;
+            }
+             .about-container h1, .high-scores-container h1 { font-size: 1.5rem; }
+             .about-container p { font-size: 1rem; }
+             .score-entry { font-size: 1rem; padding: 10px; }
+             .score-entry.rank-1 { font-size: 1.1rem; }
+             .score-entry.rank-2 { font-size: 1.05rem; }
+             .score-entry.rank-3 { font-size: 1.02rem; }
+        }
+
+
+        /* Score display styling */
+        .score-display {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 40px;
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 8px;
+            background-color: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .score-display.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        .score-flash {
+            animation: flashScore 0.5s ease-in-out 3;
+        }
+
+        @keyframes flashScore {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.2; }
+        }
+
+
+        /* Prompt styling */
+        .prompt {
+            font-size: 1.2rem;
+            color: #475569;
+            margin-bottom: 15px;
+            font-weight: 500;
+            text-align: center;
+        }
+
+         /* Message overlay styling (Shared by Game Over and Checkpoint) */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            overflow: hidden;
+        }
+        .overlay.visible { opacity: 1; visibility: visible; }
+
+        .message-box { /* Base style for pop-up boxes */
+            background-color: white;
+            padding: 30px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            max-width: 90%;
+            position: relative;
+            z-index: 1001;
+        }
+         /* Specific styles for Game Over box */
+        #message-overlay .message-box h2 { font-size: 1.5rem; font-weight: bold; color: #1e293b; margin-bottom: 15px; }
+        #message-overlay .message-box p { font-size: 1rem; color: #475569; margin-bottom: 20px; }
+        #message-overlay .message-box button { /* Restart button */
+            background-color: #3b82f6;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        #message-overlay .message-box button:hover { background-color: #2563eb; }
+
+        /* Checkpoint Pop-up Styles */
+        #checkpoint-overlay .message-box p { /* Checkpoint message */
+            font-size: 1.1rem; /* Slightly larger text */
+            color: #334155;
+            margin-bottom: 25px;
+            font-weight: 500;
+        }
+        #checkpoint-overlay .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 15px; /* Space between buttons */
+        }
+        #checkpoint-overlay .message-box button { /* General button style */
+            padding: 10px 25px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease, box-shadow 0.2s ease;
+            border: 1px solid transparent;
+        }
+        #checkpoint-continue-button {
+            background-color: #10b981; /* Green */
+            color: white;
+        }
+        #checkpoint-continue-button:hover {
+             background-color: #059669;
+             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        #checkpoint-finish-button {
+            background-color: #ef4444; /* Red */
+            color: white;
+        }
+         #checkpoint-finish-button:hover {
+             background-color: #dc2626;
+             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        /* High Score Name Prompt Styles */
+        #name-prompt-overlay .message-box p {
+            font-size: 1.1rem;
+            color: #334155;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+         #name-prompt-overlay .message-box input[type="text"] {
+             display: block;
+             width: 80%;
+             max-width: 250px;
+             margin: 0 auto 20px auto;
+             padding: 10px;
+             border: 1px solid #cbd5e1;
+             border-radius: 6px;
+             font-size: 1rem;
+             text-align: center;
+         }
+         #name-prompt-overlay .message-box button { /* Submit button */
+            background-color: #3b82f6;
+            color: white;
+            padding: 10px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+         }
+          #name-prompt-overlay .message-box button:hover {
+              background-color: #2563eb;
+          }
+
+
+        /* Spark Animation */
+        .spark {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background-color: gold;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: fly 1s ease-out forwards;
+            z-index: 1000;
+        }
+
+        @keyframes fly {
+            0% { opacity: 1; transform: translate(0, 0) scale(1); }
+            100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(0); }
+        }
+
+        /* Milestone Notification */
+        #milestone-notification {
+            position: fixed;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            z-index: 1100;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+            pointer-events: none;
+        }
+        #milestone-notification.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Sound Toggle Button */
+        #sound-toggle-button {
+            position: absolute;
+            top: 60px;
+            left: 20px;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(5px);
+            border-radius: 50%;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 1001; /* Above header background but below menu */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: background-color 0.2s ease;
+        }
+        #sound-toggle-button:hover {
+             background-color: rgba(255, 255, 255, 0.9);
+        }
+        #sound-toggle-button svg {
+            width: 24px;
+            height: 24px;
+            fill: #334155;
+        }
+        #sound-toggle-button .icon-muted { display: none; }
+        #sound-toggle-button.muted .icon-muted { display: inline-block; }
+        #sound-toggle-button.muted .icon-on { display: none; }
+
+
+        /* --- Animations --- */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideInDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes slideInUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes slideInLeft { from { transform: translateX(-50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideInRight { from { transform: translateX(50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes zoomIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes bounceIn {
+            0%, 20%, 40%, 60%, 80%, 100% { animation-timing-function: cubic-bezier(0.215, 0.610, 0.355, 1.000); }
+            0% { opacity: 0; transform: scale3d(.3, .3, .3); } 20% { transform: scale3d(1.1, 1.1, 1.1); }
+            40% { transform: scale3d(.9, .9, .9); } 60% { opacity: 1; transform: scale3d(1.03, 1.03, 1.03); }
+            80% { transform: scale3d(.97, .97, .97); } 100% { opacity: 1; transform: scale3d(1, 1, 1); }
+        }
+        @keyframes rubberBand {
+            from { transform: scale3d(1, 1, 1); } 30% { transform: scale3d(1.25, 0.75, 1); }
+            40% { transform: scale3d(0.75, 1.25, 1); } 50% { transform: scale3d(1.15, 0.85, 1); }
+            65% { transform: scale3d(.95, 1.05, 1); } 75% { transform: scale3d(1.05, .95, 1); }
+            to { transform: scale3d(1, 1, 1); }
+        }
+        .anim-fadeIn { animation-name: fadeIn; }
+        .anim-slideInDown { animation-name: slideInDown; }
+        .anim-slideInUp { animation-name: slideInUp; }
+        .anim-slideInLeft { animation-name: slideInLeft; }
+        .anim-slideInRight { animation-name: slideInRight; }
+        .anim-zoomIn { animation-name: zoomIn; }
+        .anim-bounceIn { animation-name: bounceIn; }
+        .anim-rubberBand { animation-name: rubberBand; }
+
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <header id="main-header">
+         <button id="sound-toggle-button" title="Toggle Sound">
+            <svg class="icon-on" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 4.06c0-1.34 1.61-2.24 2.79-1.46l3.87 2.58c.49.33.74.91.74 1.52v10.72c0 .61-.25 1.19-.74 1.52l-3.87 2.58c-1.18.78-2.79-.12-2.79-1.46v-1.73a10.01 10.01 0 0 1-3.18-1.57 1 1 0 0 1-.32-1.43 1 1 0 0 1 1.43-.32 8 8 0 0 0 2.07.99V12c0-.97.58-1.81 1.45-2.18a13.99 13.99 0 0 1 2.55-3.94V4.06ZM3 10a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-4Zm4.5-1.03a1 1 0 0 1 1.41 0 4 4 0 0 1 0 6.06 1 1 0 0 1-1.41-1.41 2 2 0 0 0 0-3.24 1 1 0 0 1 0-1.41Z"/></svg>
+            <svg class="icon-muted" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 4.06c0-1.34 1.61-2.24 2.79-1.46l3.87 2.58c.49.33.74.91.74 1.52v10.72c0 .61-.25 1.19-.74 1.52l-3.87 2.58c-1.18.78-2.79-.12-2.79-1.46V4.06ZM3 10a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-4Zm9.96 2 3.54 3.54a1 1 0 0 1-1.42 1.42L11.54 13.4a1 1 0 0 1 0-1.42l3.54-3.54a1 1 0 1 1 1.42 1.42L12.96 12Z"/></svg>
+        </button>
+
+         <nav id="main-nav">
+             <a href="#game" class="nav-link active" data-page="game-page">שחק במשחק</a>
+             <a href="#highscores" class="nav-link" data-page="high-scores-page">לוח השיאים</a>
+             <a href="#about" class="nav-link" data-page="about-page">אודות המשחק</a>
+         </nav>
+
+         <button id="hamburger-button" title="Menu">
+             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 4h18v2H3V4Zm0 7h18v2H3v-2Zm0 7h18v2H3v-2Z"/></svg>
+         </button>
+    </header>
+
+     <nav id="mobile-nav-menu">
+         <a href="#game" class="nav-link" data-page="game-page">שחק במשחק</a>
+         <a href="#highscores" class="nav-link" data-page="high-scores-page">לוח השיאים</a>
+         <a href="#about" class="nav-link" data-page="about-page">אודות המשחק</a>
+    </nav>
+
+    <main id="game-page" class="active"> <div class="game-container">
+            <div id="score" class="score-display">0</div>
+            <div class="word-card">
+                 <div id="correct-word-overlay" class="correct-word-overlay"></div>
+                <img id="image-display" class="image-display" src="" alt="Guess the word for this image" >
+                <div id="text-display" class="text-display"></div>
+            </div>
+
+            <div id="prompt" class="prompt">Guess the FIRST letter</div>
+
+            <div id="guess-area" class="guess-area" >
+                </div>
+
+            <input type="text" id="hidden-input" class="hidden-input" maxlength="1" autocapitalize="off" autocomplete="off" spellcheck="false">
+
+            <div id="keyboard-area">
+                </div>
+        </div>
+    </main>
+
+    <main id="about-page">
+        <div class="about-container page-container">
+            <h1>על המשחק</h1>
+            <p>במשחק לא נכתבה שורת קוד אחת. הכל באמצעות AI Gemini Pro 2.5</p>
+            </div>
+    </main>
+
+    <main id="high-scores-page">
+        <div class="high-scores-container page-container">
+            <h1>לוח השיאים</h1>
+            <ul id="high-scores-list">
+                </ul>
+             <p id="no-scores-message" style="display: none;">אין עדיין תוצאות</p>
+        </div>
+    </main>
+
+
+     <div id="message-overlay" class="overlay"> <div id="spark-container" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></div>
+        <div class="message-box">
+            <h2 id="message-title">Game Over!</h2>
+            <p id="message-text">Your final score is...</p>
+            <button id="restart-button">Play Again</button>
+        </div>
+    </div>
+
+    <div id="checkpoint-overlay" class="overlay">
+        <div class="message-box">
+            <p id="checkpoint-message">כל הכבוד! סיימתם 10 מילים חדשות, האם תרצו להמשיך ולצבור עוד נקודות?</p>
+            <div class="button-group">
+                 <button id="checkpoint-continue-button">המשך</button> <button id="checkpoint-finish-button">סיים</button> </div>
+        </div>
+    </div>
+
+     <div id="name-prompt-overlay" class="overlay">
+         <div class="message-box">
+             <p>ברכות! הגעתם לשיא חדש ונכנסתם ללוח התוצאות! נא רשמו את שמכם:</p>
+             <input type="text" id="player-name-input" maxlength="15" placeholder="Your Name">
+             <button id="submit-name-button">שמור</button> </div>
+     </div>
+
+    <div id="milestone-notification">10 Points!!!</div>
+
+    <audio id="bg-music" loop>
+        <source src="assets/mp3/1.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
+    <script>
+        // --- DOM Elements ---
+        const imageDisplay = document.getElementById('image-display');
+        const textDisplay = document.getElementById('text-display');
+        const wordCard = document.querySelector('.word-card');
+        const guessArea = document.getElementById('guess-area');
+        const hiddenInput = document.getElementById('hidden-input');
+        const keyboardArea = document.getElementById('keyboard-area');
+        const scoreDisplay = document.getElementById('score');
+        const promptDisplay = document.getElementById('prompt');
+        const messageOverlay = document.getElementById('message-overlay');
+        const sparkContainer = document.getElementById('spark-container');
+        const messageTitle = document.getElementById('message-title');
+        const messageText = document.getElementById('message-text');
+        const restartButton = document.getElementById('restart-button');
+        const milestoneNotification = document.getElementById('milestone-notification');
+        const bgMusicElement = document.getElementById('bg-music');
+        const soundToggleButton = document.getElementById('sound-toggle-button');
+        const hamburgerButton = document.getElementById('hamburger-button');
+        const mobileNavMenu = document.getElementById('mobile-nav-menu');
+        const mainNavLinks = document.querySelectorAll('#main-nav .nav-link');
+        const mobileNavLinks = document.querySelectorAll('#mobile-nav-menu .nav-link');
+        const pages = document.querySelectorAll('main');
+        const checkpointOverlay = document.getElementById('checkpoint-overlay');
+        const checkpointContinueButton = document.getElementById('checkpoint-continue-button');
+        const checkpointFinishButton = document.getElementById('checkpoint-finish-button');
+        const highScoresList = document.getElementById('high-scores-list');
+        const noScoresMessage = document.getElementById('no-scores-message');
+        const namePromptOverlay = document.getElementById('name-prompt-overlay');
+        const playerNameInput = document.getElementById('player-name-input');
+        const submitNameButton = document.getElementById('submit-name-button');
+        const correctWordOverlay = document.getElementById('correct-word-overlay'); // Get the new overlay div
+
+
+        // --- Game Configuration ---
+        const wordData = [
+             { word: 'elephant', imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/African_Bush_Elephant.jpg/1280px-African_Bush_Elephant.jpg' },
+            { word: 'egg', imageUrl: 'https://thumbs.dreamstime.com/b/cheerful-animated-egg-character-arms-legs-cheerful-animated-egg-character-features-friendly-face-arms-349677850.jpg?w=768' },
+            { word: 'eraser', imageUrl: 'https://thumbs.dreamstime.com/b/transparent-glowing-eraser-animated-erasing-action-sleek-transparent-glowing-eraser-animated-erasing-effect-368891160.jpg?w=768' },
+            { word: 'school', imageUrl: 'https://thumbs.dreamstime.com/b/school-activity-vector-illustration-42666092.jpg?w=992' },
+            { word: 'pencil', imageUrl: 'https://thumbs.dreamstime.com/b/playful-cartoon-pencil-mascot-happy-expression-ideal-education-creativity-fun-school-projects-354712103.jpg?w=992' },
+            { word: 'bed', imageUrl: 'https://thumbs.dreamstime.com/b/bed-icon-flat-design-vector-illustration-retro-style-double-bed-vector-outline-vintage-furniture-icon-flat-design-linear-118463479.jpg?w=768' },
+            { word: 'table', imageUrl: 'https://thumbs.dreamstime.com/b/wooden-table-eps-vector-illustration-white-background-transparent-objects-opacity-masks-used-shadows-lights-drawing-35692708.jpg?w=768' },
+            { word: 'test', imageUrl: 'https://thumbs.dreamstime.com/b/close-up-look-score-final-exam-paper-red-pen-44378706.jpg?w=768' },
+            { word: 'teacher', imageUrl: 'https://thumbs.dreamstime.com/b/animated-illustration-male-teacher-standing-front-chalkboard-wearing-blue-suit-jacket-light-shirt-smiling-366267898.jpg?w=768' },
+            { word: 'pen', imageUrl: 'https://thumbs.dreamstime.com/b/red-pen-24495014.jpg?w=768' },
+            { word: 'pencil-case', imageUrl: 'https://thumbs.dreamstime.com/b/pencil-case-17588896.jpg?w=768' },
+            { word: 'hat', imageUrl: 'https://thumbs.dreamstime.com/b/hat-10595142.jpg?w=768' },
+            { word: 'add', displayText: 'לחבר, להוסיף' },
+            { word: 'plus', imageUrl: 'https://thumbs.dreamstime.com/b/sign-plus-white-background-12355372.jpg?w=768' },
+            { word: 'in', displayText: 'בתוך, ב-' },
+            { word: 'on', displayText: 'על' },
+            { word: 'pupil', imageUrl: 'https://thumbs.dreamstime.com/b/little-girl-cartoon-studying-illustration-34606556.jpg?w=768' },
+            { word: 'picture', imageUrl: 'https://thumbs.dreamstime.com/b/framed-illusion-young-woman-looking-classic-baroque-picture-frame-grunge-textured-wall-landscape-showing-hot-air-116260079.jpg?w=768' },
+            { word: 'chair', imageUrl: 'https://thumbs.dreamstime.com/b/wooden-chair-19335760.jpg?w=768' },
+            { word: 'lost', displayText: 'אבד' },
+            { word: 'ask', displayText: 'לשאול' },
+            { word: 'play', imageUrl: 'https://thumbs.dreamstime.com/b/laughing-smiling-kids-sit-floor-circle-play-toy-cubes-talk-children-s-entertainment-preschool-kindergarten-84213751.jpg?w=768' },
+            { word: 'sing', imageUrl: 'https://thumbs.dreamstime.com/b/happy-cute-kid-girl-sing-song-166431357.jpg?w=768' },
+            { word: 'run', imageUrl: 'https://thumbs.dreamstime.com/b/happy-kid-boy-train-run-marathon-jogging-happy-kid-boy-train-run-marathon-jogging-cute-children-girl-fun-kinder-kindergarten-160914622.jpg?w=768' },
+            { word: 'rest', imageUrl: 'https://thumbs.dreamstime.com/b/3d-small-people-rest-chaise-lounge-14119820.jpg?w=768' },
+            { word: 'hen', imageUrl: 'https://thumbs.dreamstime.com/b/chicken-hen-cute-posing-illustration-white-background-60511513.jpg?w=768' },
+            { word: 'rabbit', imageUrl: 'https://thumbs.dreamstime.com/b/rabbit-illustration-cute-cartoon-65849913.jpg?w=768' },
+            { word: 'best', displayText: 'הכי טוב' },
+            { word: 'hand', imageUrl: 'https://thumbs.dreamstime.com/b/up-your-hand-18936618.jpg?w=1400' },
+            { word: 'horse', imageUrl: 'https://thumbs.dreamstime.com/b/purebred-horse-illustration-chestnut-43286851.jpg?w=768' },
+            { word: 'happy', imageUrl: 'https://thumbs.dreamstime.com/b/happy-smiley-emoticon-face-27613930.jpg?w=768' },
+            { word: 'good', displayText: 'טוב' },
+            { word: 'tall', imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/f/f7/Robert_Wadlow_postcard.jpg' },
+            { word: 'fast', displayText: 'מהיר' },
+            { word: 'ball', imageUrl: 'https://thumbs.dreamstime.com/b/football-soccer-ball-flat-icon-white-isolated-background-eps-file-available-93721599.jpg?w=768' },
+            { word: 'sofa', imageUrl: 'https://thumbs.dreamstime.com/b/sofa-clock-5916545.jpg?w=768' },
+            { word: 'sun', imageUrl: 'https://thumbs.dreamstime.com/b/smiling-sun-illustration-character-34434947.jpg?w=768' },
+            { word: 'sunny', displayText: 'בהיר, מוצף שמש' },
+            { word: 'hot', imageUrl: 'https://thumbs.dreamstime.com/b/hot-bursting-thermometer-illustration-high-temperature-exploding-44252591.jpg?w=768' },
+            { word: 'cold', imageUrl: 'https://thumbs.dreamstime.com/b/vector-ice-cold-symbol-illustration-31904919.jpg?w=768' },
+            { word: 'living room', imageUrl: 'https://thumbs.dreamstime.com/b/light-living-room-interior-bright-sunny-day-layered-vector-eps-v-enjoy-38719351.jpg?w=768' },
+            { word: 'farm', imageUrl: 'https://thumbs.dreamstime.com/b/happy-farm-animals-vector-illustration-living-peacefully-together-barn-background-50639771.jpg?w=768' },
+            { word: 'mouse', imageUrl: 'https://thumbs.dreamstime.com/b/cartoon-happy-mouse-waving-illustration-134078893.jpg?w=768' },
+            { word: 'sheep', imageUrl: 'https://thumbs.dreamstime.com/b/cute-sheep-14124678.jpg?w=768' },
+            { word: 'tree', imageUrl: 'https://thumbs.dreamstime.com/b/palm-tree-shadow-white-vector-30242034.jpg?w=768' },
+            { word: 'friend', imageUrl: 'https://thumbs.dreamstime.com/b/care-friend-18171509.jpg?w=768' },
+            { word: 'job', displayText: 'עבודה' },
+            { word: 'soft', displayText: 'רך' },
+            { word: 'fun', displayText: 'כיף, מהנה' },
+            { word: 'cow', imageUrl: 'https://thumbs.dreamstime.com/b/cartoon-cow-friendly-expression-59284628.jpg?w=768' },
+            { word: 'carrot', imageUrl: 'https://thumbs.dreamstime.com/b/cartoon-carrot-vector-illustration-isolated-white-110455651.jpg?w=768' },
+            { word: 'leg', imageUrl: 'https://thumbs.dreamstime.com/b/leg-vector-front-view-illustration-human-legs-composition-113961429.jpg?w=768' },
+            { word: 'brown', imageUrl: 'https://thumbs.dreamstime.com/b/chocolate-splash-blot-drops-stain-38516728.jpg?w=768' },
+            { word: 'they', displayText: 'הם, הן' },
+            { word: 'now', displayText: 'עכשיו' },
+            { word: 'hungry', imageUrl: 'https://thumbs.dreamstime.com/b/hungry-emoticon-18251487.jpg?w=768' },
+            { word: 'lamp', imageUrl: 'https://thumbs.dreamstime.com/b/lamp-light-bulb-vector-icon-lamp-light-bulb-vector-icon-idea-creative-think-lightbulb-lamp-symbol-115241795.jpg?w=768' },
+            { word: 'mat', imageUrl: 'https://thumbs.dreamstime.com/b/flying-rag-rug-carpet-vintage-colorful-like-magic-isolated-vector-illustration-over-white-background-56117568.jpg?w=768' },
+            { word: 'milk', imageUrl: 'https://thumbs.dreamstime.com/b/coloring-book-milk-box-children-138603303.jpg?w=768' },
+            { word: 'floor', imageUrl: 'https://thumbs.dreamstime.com/b/wood-floor-14838840.jpg?w=1400' },
+            { word: 'garden', imageUrl: 'https://thumbs.dreamstime.com/b/cartoon-garden-fruits-vegetables-vector-illustration-fresh-70985624.jpg?w=768' },
+            { word: 'kitchen', imageUrl: 'https://thumbs.dreamstime.com/b/vector-cartoon-illustration-kitchen-interior-cozy-modern-dinner-table-household-appliances-fridge-stove-microwave-113675611.jpg?w=768' },
+            { word: 'mad', imageUrl: 'https://thumbs.dreamstime.com/b/furious-emoticon-24770560.jpg?w=768' },
+            { word: 'lunch', imageUrl: 'https://thumbs.dreamstime.com/b/fast-food-lunch-pizza-hamburgers-hot-dogs-pop-40386346.jpg?w=768' },
+            { word: 'juice', imageUrl: 'https://thumbs.dreamstime.com/b/glass-orange-juice-vector-cartoon-56217990.jpg?w=768' },
+            { word: 'cookie', imageUrl: 'https://thumbs.dreamstime.com/b/chocolate-chips-cookie-vector-illustration-sweet-food-baking-icon-52699777.jpg?w=768' },
+            { word: 'chicken', imageUrl: 'https://thumbs.dreamstime.com/b/roast-turkey-chicken-dinner-plate-traditional-thanksgiving-vector-clip-art-illustration-simple-cartoon-style-isolated-133279135.jpg?w=768' },
+            { word: 'car', imageUrl: 'https://thumbs.dreamstime.com/b/american-pony-car-detail-vector-image-black-modern-white-racing-stripes-isolated-white-background-file-contains-31147806.jpg?w=992' },
+            { word: 'plan', displayText: 'תכנית' },
+            { word: 'sandwich', imageUrl: 'https://thumbs.dreamstime.com/b/appetizing-sandwich-cheese-vegetables-18855790.jpg?w=768' }, // Placeholder
+        ];
+        const animations = ['anim-fadeIn', 'anim-slideInDown', 'anim-slideInUp', 'anim-slideInLeft', 'anim-slideInRight', 'anim-zoomIn', 'anim-bounceIn', 'anim-rubberBand'];
+        const totalWords = wordData.length; // Automatically calculated
+        const checkpointInterval = 10; // Ask every 10 words
+        const HIGH_SCORES_KEY = 'wordGuessHighScores';
+        const MAX_HIGH_SCORES = 10; // Max number of scores to keep
+
+        // --- Game State ---
+        let currentWordIndex = 0;
+        let score = 0;
+        let currentWord = '';
+        let displayedGuess = []; // Array to hold underscores and correct letters
+        let guessingStage = 'first'; // 'first' or 'last'
+        let firstLetterCorrect = false;
+        let lastLetterCorrect = false;
+        let listeningForInput = true; // Control when to process input
+        let isTouchDevice = false; // Flag for touch device detection
+        let toneStarted = false; // Flag to ensure Tone.js starts only once
+        let scoreFlashTimeout = null; // Timeout ID for score flash
+        let musicPlaying = false; // Flag for HTML audio state
+        let isMuted = false; // --- NEW: Mute state ---
+        let finalScoreToSave = 0; // --- NEW: Store score temporarily before saving name ---
+
+        // --- Tone.js Setup (Sound Effects Only) ---
+        const synth = new Tone.PolySynth(Tone.Synth, {
+             oscillator: { type: "sine" },
+             envelope: { attack: 0.01, decay: 0.1, sustain: 0.3, release: 0.5 }
+        }).toDestination();
+        const correctSoundSynth = new Tone.Synth({ // Synth for correct sound
+            oscillator: { type: "triangle" },
+            volume: -5, // Slightly louder correct sound
+            envelope: { attack: 0.01, decay: 0.1, sustain: 0.1, release: 0.2 }
+        }).toDestination();
+        const incorrectSoundSynth = new Tone.Synth({ // Synth for incorrect sound
+            oscillator: { type: "square" },
+             volume: -10,
+            envelope: { attack: 0.01, decay: 0.2, sustain: 0, release: 0.1 }
+        }).toDestination();
+        // --- Background Music Synths Removed ---
+
+
+        // --- Functions ---
+
+        /**
+         * Attempts to start the Tone.js audio context for sound effects.
+         * Attempts to play the HTML audio element for background music.
+         */
+        async function startAudio() {
+            // Start Tone.js context if needed
+            if (!toneStarted && Tone.context.state !== 'running') {
+                console.log("Attempting to start audio context..."); // DEBUG
+                try {
+                    await Tone.start();
+                    toneStarted = true;
+                     Tone.Destination.mute = isMuted;
+                    console.log("Audio context started successfully."); // DEBUG
+                } catch (e) {
+                    console.error("Failed to start Tone.js audio context:", e);
+                }
+            }
+            // Attempt to play background music only if not muted and on game page
+            if (document.getElementById('game-page').classList.contains('active') && bgMusicElement && bgMusicElement.paused && !musicPlaying && !isMuted) {
+                 console.log("Attempting to play background music..."); // DEBUG
+                 try {
+                     // Set volume before playing
+                     bgMusicElement.volume = 0.3; // Adjust volume (0.0 to 1.0)
+                     await bgMusicElement.play();
+                     musicPlaying = true;
+                     console.log("Background music playing."); // DEBUG
+                 } catch (error) {
+                     console.warn("Background music autoplay failed:", error);
+                     // Autoplay was likely prevented, user might need to interact more
+                 }
+            }
+        }
+
+        /**
+         * Stops the HTML audio element.
+         */
+        function stopBackgroundMusic() {
+            if (bgMusicElement && !bgMusicElement.paused) {
+                bgMusicElement.pause();
+                bgMusicElement.currentTime = 0; // Reset to beginning
+                musicPlaying = false;
+                console.log("Background music stopped.");
+            }
+        }
+
+
+        /**
+         * Detects if it's likely a touch device.
+         */
+        function detectTouch() {
+             isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0);
+             if (isTouchDevice) {
+                 document.body.classList.add('touch-device');
+                 document.body.classList.remove('no-touch-device');
+             } else {
+                 document.body.classList.add('no-touch-device');
+                 document.body.classList.remove('touch-device');
+             }
+        }
+
+        /**
+         * Shuffles array in place using Fisher-Yates (Knuth) algorithm.
+         * @param {Array} array Array to shuffle.
+         */
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        /**
+         * Creates the on-screen keyboard buttons.
+         */
+        function createKeyboard() {
+            keyboardArea.innerHTML = ''; // Clear previous keyboard if any
+            const rows = [
+                "qwertyuiop",
+                "asdfghjkl",
+                "zxcvbnm"
+            ];
+
+            rows.forEach(rowString => {
+                const rowDiv = document.createElement('div');
+                rowDiv.classList.add('keyboard-row');
+                rowString.split('').forEach(letter => {
+                    const button = document.createElement('button');
+                    button.textContent = letter.toUpperCase();
+                    button.dataset.key = letter; // Add data attribute for easy selection
+                    button.addEventListener('click', () => handleOnScreenKeyPress(letter));
+                    rowDiv.appendChild(button);
+                });
+                keyboardArea.appendChild(rowDiv);
+            });
+            keyboardArea.classList.add('visible'); // Make keyboard visible
+
+            animateKeyboardIntro();
+        }
+
+        /**
+         * Animates the keyboard intro.
+         */
+        function animateKeyboardIntro() {
+            const sequence = ['m', 'i', 'l', 'e', 'y'];
+            const highlightDuration = 300; // ms per letter highlight
+            const finalDelay = 2000; // ms after last letter before clearing
+
+            sequence.forEach((letter, index) => {
+                setTimeout(() => {
+                    const keyButton = keyboardArea.querySelector(`button[data-key="${letter}"]`);
+                    if (keyButton) {
+                        keyButton.classList.add('key-highlight');
+                    }
+                }, index * highlightDuration);
+            });
+
+            setTimeout(() => {
+                const highlightedKeys = keyboardArea.querySelectorAll('.key-highlight');
+                highlightedKeys.forEach(key => key.classList.remove('key-highlight'));
+            }, sequence.length * highlightDuration + finalDelay);
+        }
+
+
+        /**
+         * Initializes or restarts the game.
+         */
+        function startGame() {
+            console.log("Starting game..."); // DEBUG
+            stopBackgroundMusic(); // Stop music from previous game if any
+
+            detectTouch(); // Detect touch capability
+            console.log("Is touch device:", isTouchDevice); // DEBUG
+            shuffleArray(wordData); // Shuffle the word list
+
+            // Reset game state
+            currentWordIndex = 0;
+            score = 0;
+            guessingStage = 'first';
+            firstLetterCorrect = false;
+            lastLetterCorrect = false;
+            listeningForInput = true;
+            messageOverlay.classList.remove('visible');
+            checkpointOverlay.classList.remove('visible'); // Ensure checkpoint is hidden
+            namePromptOverlay.classList.remove('visible'); // Ensure name prompt is hidden
+            sparkContainer.innerHTML = ''; // Clear any old sparks
+            scoreDisplay.classList.remove('visible', 'score-flash');
+            if (scoreFlashTimeout) clearTimeout(scoreFlashTimeout);
+            updateScoreDisplay();
+
+            soundToggleButton.classList.toggle('muted', isMuted);
+            bgMusicElement.muted = isMuted; // Ensure HTML audio matches mute state
+
+            if (isTouchDevice) {
+                console.log("Creating on-screen keyboard"); // DEBUG
+                createKeyboard();
+            } else {
+                 console.log("Hiding on-screen keyboard"); // DEBUG
+                 keyboardArea.innerHTML = '';
+                 keyboardArea.classList.remove('visible');
+            }
+
+            loadWord(); // Load the first word
+
+            hiddenInput.removeEventListener('input', handleTextInput);
+            hiddenInput.addEventListener('input', handleTextInput);
+
+            const focusTrigger = isTouchDevice ? 'touchstart' : 'click';
+            guessArea.removeEventListener(focusTrigger, focusHiddenInput);
+            guessArea.addEventListener(focusTrigger, focusHiddenInput);
+            promptDisplay.removeEventListener(focusTrigger, focusHiddenInput);
+            promptDisplay.addEventListener(focusTrigger, focusHiddenInput);
+
+            soundToggleButton.removeEventListener('click', toggleMute); // Remove old listener if any
+            soundToggleButton.addEventListener('click', toggleMute);
+
+            // --- Navigation Listeners ---
+            mainNavLinks.forEach(link => link.removeEventListener('click', handleNavClick));
+            mobileNavLinks.forEach(link => link.removeEventListener('click', handleNavClick));
+            hamburgerButton.removeEventListener('click', toggleMobileMenu);
+
+            mainNavLinks.forEach(link => link.addEventListener('click', handleNavClick));
+            mobileNavLinks.forEach(link => link.addEventListener('click', handleNavClick));
+            hamburgerButton.addEventListener('click', toggleMobileMenu);
+
+             // --- Checkpoint Listeners ---
+             checkpointContinueButton.removeEventListener('click', handleCheckpointContinue);
+             checkpointFinishButton.removeEventListener('click', handleCheckpointFinish);
+             checkpointContinueButton.addEventListener('click', handleCheckpointContinue);
+             checkpointFinishButton.addEventListener('click', handleCheckpointFinish);
+
+             // --- Name Prompt Listener ---
+             submitNameButton.removeEventListener('click', handleNameSubmit);
+             submitNameButton.addEventListener('click', handleNameSubmit);
+
+
+             // Show the game page initially
+            showPage('game-page');
+
+            console.log("Game setup complete."); // DEBUG
+        }
+
+        /**
+         * Toggles mute state for all sounds.
+         */
+        function toggleMute() {
+            isMuted = !isMuted;
+            console.log("Mute toggled:", isMuted); // DEBUG
+            soundToggleButton.classList.toggle('muted', isMuted); // Update button icon
+
+            // Mute/unmute Tone.js effects
+            if (toneStarted) {
+                 Tone.Destination.mute = isMuted;
+            }
+
+            // Mute/unmute HTML background audio
+            bgMusicElement.muted = isMuted;
+            if (!isMuted && bgMusicElement.paused && document.getElementById('game-page').classList.contains('active')) {
+                // If unmuting, music was paused, AND we are on the game page, try to play it
+                startAudio();
+            } else if (isMuted && !bgMusicElement.paused){
+                 // If muting and music was playing, pause it
+                 stopBackgroundMusic(); // Use stop function to also reset flag
+            }
+        }
+
+
+        /**
+         * Focuses the hidden input field and attempts to start audio context.
+         */
+        function focusHiddenInput() {
+             startAudio(); // Attempt to start audio on first interaction
+            if (listeningForInput && guessingStage !== 'done' && !isTouchDevice) {
+                 console.log("Focusing hidden input (non-touch)"); // DEBUG
+                hiddenInput.focus();
+            } else if (isTouchDevice) {
+                 console.log("Touch device detected, not focusing hidden input on tap."); // DEBUG
+                 if (document.activeElement === hiddenInput) {
+                    hiddenInput.blur();
+                 }
+            }
+        }
+
+        /**
+         * Updates the content of the guess area using spans and highlights the active slot.
+         */
+        function updateGuessArea() {
+            guessArea.innerHTML = ''; // Clear previous slots
+            displayedGuess.forEach((letter, index) => {
+                const slot = document.createElement('span');
+                slot.classList.add('guess-slot');
+                slot.textContent = letter; // Either '_' or the correct letter
+
+                // Apply active class for blinking border
+                if (listeningForInput && guessingStage !== 'done') {
+                     if (guessingStage === 'first' && index === 0) {
+                        slot.classList.add('active-guess');
+                    } else if (guessingStage === 'last' && index === currentWord.length - 1) {
+                        slot.classList.add('active-guess');
+                    }
+                }
+
+                guessArea.appendChild(slot);
+            });
+             // console.log("Guess area updated:", displayedGuess.join('')); // DEBUG
+        }
+
+
+        /**
+         * Loads the current word/image/text, displays it with animation, and sets up the guess area.
+         */
+        function loadWord() {
+            // console.log(`Loading word index: ${currentWordIndex}`); // DEBUG
+            if (currentWordIndex >= totalWords) {
+                console.log("All words completed, ending game."); // DEBUG
+                endGame();
+                return;
+            }
+
+            const currentData = wordData[currentWordIndex];
+            if (!currentData || !currentData.word) {
+                console.error(`Invalid data at index ${currentWordIndex}:`, currentData);
+                currentWordIndex++;
+                loadWord();
+                return;
+            }
+
+            const wordForThisCard = currentData.word.toLowerCase();
+            currentWord = wordForThisCard;
+            // console.log(`Current word: ${currentWord}`); // DEBUG
+
+            firstLetterCorrect = false;
+            lastLetterCorrect = false;
+            guessingStage = 'first';
+            promptDisplay.textContent = `Guess the FIRST letter`; // Text Updated
+             correctWordOverlay.style.display = 'none';
+             correctWordOverlay.textContent = '';
+
+
+            displayedGuess = Array(currentWord.length).fill('_');
+            updateGuessArea();
+
+            const randomAnimation = animations[Math.floor(Math.random() * animations.length)];
+            imageDisplay.className = 'image-display';
+            textDisplay.className = 'text-display';
+            imageDisplay.style.display = 'none';
+            textDisplay.style.display = 'none';
+            imageDisplay.onerror = null;
+
+            if (currentData.displayText) {
+                textDisplay.textContent = currentData.displayText;
+                textDisplay.style.display = 'block';
+                setTimeout(() => textDisplay.classList.add(randomAnimation), 10);
+            } else if (currentData.imageUrl) {
+                imageDisplay.onerror = function() {
+                    console.error(`Image failed to load for word: ${wordForThisCard}`); // DEBUG
+                    handleImageError(this, wordForThisCard);
+                };
+                imageDisplay.src = currentData.imageUrl;
+                imageDisplay.style.display = 'block';
+                setTimeout(() => imageDisplay.classList.add(randomAnimation), 10);
+            } else {
+                 textDisplay.textContent = `No content for "${currentWord}"`;
+                 textDisplay.classList.add('fallback');
+                 textDisplay.style.display = 'block';
+                 setTimeout(() => textDisplay.classList.add(randomAnimation), 10);
+            }
+
+            wordCard.style.boxShadow = '0 10px 20px rgba(0, 0, 0, 0.1)';
+
+            updateScoreDisplay();
+            listeningForInput = true;
+            // console.log("Word loaded successfully."); // DEBUG
+
+             if (!isTouchDevice) {
+                 setTimeout(focusHiddenInput, 100);
+             }
+        }
+
+        /**
+         * Handles image loading errors.
+         * @param {HTMLImageElement} imgElement - The image element that failed.
+         * @param {string} word - The word associated with this image load attempt.
+         */
+        function handleImageError(imgElement, word) {
+             // console.log(`Handling image error for word: ${word}`); // DEBUG
+            imgElement.style.display = 'none';
+            imgElement.className = 'image-display';
+
+            textDisplay.textContent = `Image for "${word}" not found`;
+            textDisplay.className = 'text-display fallback';
+            textDisplay.style.display = 'block';
+
+            const randomAnimation = animations[Math.floor(Math.random() * animations.length)];
+             setTimeout(() => {
+                 if (textDisplay) {
+                     textDisplay.classList.add(randomAnimation);
+                 }
+             }, 10);
+        }
+
+
+        /**
+         * Updates the score display text and color.
+         */
+        function updateScoreDisplay() {
+            scoreDisplay.textContent = `${score}`;
+            const maxScore = totalWords * 2;
+            const percentage = maxScore > 0 ? (score / maxScore) : 0;
+            const hue = percentage * 120;
+            scoreDisplay.style.color = `hsl(${hue}, 100%, 40%)`;
+        }
+
+        /**
+         * Flashes the score display.
+         */
+        function flashScore() {
+            if (scoreFlashTimeout) clearTimeout(scoreFlashTimeout);
+            scoreDisplay.classList.remove('score-flash');
+            void scoreDisplay.offsetWidth;
+            scoreDisplay.classList.add('visible', 'score-flash');
+            scoreFlashTimeout = setTimeout(() => {
+                 scoreDisplay.classList.remove('visible', 'score-flash');
+            }, 1500);
+        }
+
+
+         /**
+         * Provides visual feedback on a specific guess slot.
+         * @param {number} index - The index of the slot.
+         * @param {boolean} correct - Whether the guess was correct.
+         */
+        function provideSlotFeedback(index, correct) {
+            const slots = guessArea.querySelectorAll('.guess-slot');
+            if (slots && slots[index]) {
+                slots[index].classList.remove('active-guess'); // Always remove active style
+                slots[index].classList.add(correct ? 'correct' : 'incorrect');
+                setTimeout(() => {
+                    if (slots[index]) {
+                        slots[index].classList.remove('correct', 'incorrect');
+                    }
+                }, 300);
+                 // Play Sound Effect (check mute state)
+                if (toneStarted && !isMuted) { // Check isMuted
+                    try {
+                        if (correct) {
+                            correctSoundSynth.triggerAttackRelease("C5", "16n", Tone.now()); // Higher pitch for correct
+                        } else {
+                            incorrectSoundSynth.triggerAttackRelease("A2", "8n", Tone.now()); // Lower pitch for incorrect
+                        }
+                    } catch(e) { console.error("Sound effect error:", e); }
+                }
+            } else {
+                console.warn(`Could not find slot at index ${index} to provide feedback.`); // DEBUG
+            }
+        }
+
+
+        /**
+         * Handles input from the hidden text field (physical keyboard).
+         * @param {InputEvent} event - The input event object.
+         */
+        function handleTextInput(event) {
+            startAudio(); // Attempt to start audio on first interaction
+            if (!listeningForInput || guessingStage === 'done') return;
+
+            const guessedLetter = event.target.value.toLowerCase();
+            event.target.value = ''; // Clear the input field immediately
+
+            if (guessedLetter.length === 1 && guessedLetter.match(/[a-z]/i)) {
+                 // console.log(`Physical keyboard input: ${guessedLetter}`); // DEBUG
+                 processGuess(guessedLetter);
+            }
+        }
+
+        /**
+         * Handles clicks from the on-screen keyboard.
+         * @param {string} letter - The letter from the clicked button.
+         */
+        function handleOnScreenKeyPress(letter) {
+             startAudio(); // Attempt to start audio on first interaction
+             if (!listeningForInput || guessingStage === 'done') return;
+             // console.log(`On-screen keyboard input: ${letter}`); // DEBUG
+             processGuess(letter.toLowerCase());
+             // Removed focus call
+        }
+
+
+        /**
+         * Processes the guessed letter (from any source).
+         * --- MODIFIED: Show correct word on failure ---
+         * @param {string} guessedLetter - The validated single letter guess.
+         */
+        function processGuess(guessedLetter) {
+             // console.log(`Processing guess: ${guessedLetter}, Stage: ${guessingStage}`); // DEBUG
+             if (guessingStage === 'first') {
+                const firstLetter = currentWord[0];
+                const correct = guessedLetter === firstLetter;
+                if (correct) {
+                    displayedGuess[0] = firstLetter;
+                    firstLetterCorrect = true;
+                    score++; // Increment score for correct first letter
+                    updateScoreDisplay();
+                    flashScore();
+                    if (score > 0 && score % 10 === 0) showMilestoneNotification(score);
+                } else {
+                    firstLetterCorrect = false;
+                }
+                provideSlotFeedback(0, correct); // Provide feedback & sound
+
+                guessingStage = 'last';
+                promptDisplay.textContent = 'Guess the LAST letter'; // Text Updated
+                updateGuessArea();
+                if (!isTouchDevice) {
+                    focusHiddenInput();
+                }
+
+            } else if (guessingStage === 'last') {
+                const lastLetter = currentWord[currentWord.length - 1];
+                const lastIndex = currentWord.length - 1;
+                const correct = guessedLetter === lastLetter;
+                let showCorrectWord = false; // Flag to check if we need to show the word
+
+                if (correct) {
+                    displayedGuess[lastIndex] = lastLetter;
+                    lastLetterCorrect = true;
+                    score++; // Increment score for correct last letter
+                    updateScoreDisplay();
+                    flashScore();
+                    if (score > 0 && score % 10 === 0) showMilestoneNotification(score);
+                } else {
+                    lastLetterCorrect = false;
+                }
+                 provideSlotFeedback(lastIndex, correct); // Provide feedback & sound
+
+                guessingStage = 'done';
+                updateGuessArea(); // Update to show final guess, remove highlight
+
+                listeningForInput = false; // Stop listening for this word
+                // console.log(`Word complete. First correct: ${firstLetterCorrect}, Last correct: ${lastLetterCorrect}`); // DEBUG
+
+                // --- MODIFIED: Show correct word if either guess was wrong ---
+                if (!firstLetterCorrect || !lastLetterCorrect) {
+                     correctWordOverlay.textContent = currentWord;
+                     correctWordOverlay.style.display = 'block';
+                     wordCard.style.boxShadow = '0 0 15px 5px rgba(248, 113, 113, 0.7)'; // Red glow
+                     showCorrectWord = true; // Set flag to delay next word
+                } else {
+                     wordCard.style.boxShadow = '0 0 15px 5px rgba(74, 222, 128, 0.7)'; // Green glow
+                }
+
+                // --- Check for Checkpoint ---
+                const nextWordNum = currentWordIndex + 1;
+                // --- MODIFIED: Calculate delay based on whether the word was shown ---
+                const baseDelay = 1200;
+                const extraDelay = showCorrectWord ? 2000 : 0; // Add 2 seconds if word shown
+                const totalDelay = baseDelay + extraDelay;
+
+                if (nextWordNum < totalWords && nextWordNum % checkpointInterval === 0) {
+                    // It's a checkpoint! Show the prompt after the delay.
+                    setTimeout(showCheckpointPrompt, totalDelay - 400); // Show slightly before full delay
+                } else {
+                    // Not a checkpoint, proceed to next word after the calculated delay
+                    setTimeout(() => {
+                        currentWordIndex++;
+                        loadWord();
+                    }, totalDelay);
+                }
+            }
+        }
+
+         /**
+         * Shows the milestone notification.
+         * @param {number} points - The score milestone reached.
+         */
+        function showMilestoneNotification(points) {
+            milestoneNotification.textContent = `${points} Points!!! 🎉`;
+            milestoneNotification.classList.add('visible');
+            setTimeout(() => {
+                milestoneNotification.classList.remove('visible');
+            }, 2500); // Show for 2.5 seconds
+        }
+
+        /**
+         * Shows the checkpoint pop-up.
+         */
+        function showCheckpointPrompt() {
+            console.log("Showing checkpoint prompt"); // DEBUG
+            stopBackgroundMusic(); // Pause music during prompt
+            checkpointOverlay.classList.add('visible');
+        }
+
+        /**
+         * Handles the "Continue" button click.
+         */
+        function handleCheckpointContinue() {
+            console.log("Checkpoint: Continue"); // DEBUG
+            checkpointOverlay.classList.remove('visible');
+            currentWordIndex++; // Move to the next word index
+            loadWord(); // Load the next word
+            startAudio(); // Resume music if not muted
+        }
+
+        /**
+         * Handles the "Finish" button click.
+         */
+        function handleCheckpointFinish() {
+             console.log("Checkpoint: Finish"); // DEBUG
+             checkpointOverlay.classList.remove('visible');
+             endGame(); // End the game early
+        }
+
+
+        /**
+         * Creates spark elements for the victory animation.
+         */
+        function createSparks() {
+            sparkContainer.innerHTML = ''; // Clear old sparks
+            const sparkCount = 50; // Number of sparks
+            for (let i = 0; i < sparkCount; i++) {
+                const spark = document.createElement('div');
+                spark.classList.add('spark');
+                const startX = 50 + (Math.random() - 0.5) * 20; // %
+                const startY = 50 + (Math.random() - 0.5) * 20; // %
+                spark.style.left = `${startX}%`;
+                spark.style.top = `${startY}%`;
+
+                const angle = Math.random() * Math.PI * 2;
+                const distance = 100 + Math.random() * 150; // pixels
+                const endX = Math.cos(angle) * distance;
+                const endY = Math.sin(angle) * distance;
+
+                spark.style.setProperty('--tx', `${endX}px`);
+                spark.style.setProperty('--ty', `${endY}px`);
+
+                 const hue = 35 + Math.random() * 25; // Gold/Yellow/Orange range
+                 spark.style.backgroundColor = `hsl(${hue}, 100%, 50%)`;
+
+                sparkContainer.appendChild(spark);
+
+                spark.addEventListener('animationend', () => {
+                    spark.remove();
+                });
+            }
+        }
+
+        /**
+         * Plays a simple victory sound using Tone.js.
+         */
+        function playVictorySound() {
+            if (!toneStarted || isMuted) { // Check mute state
+                console.warn("Audio context not started or muted, cannot play victory sound."); // DEBUG
+                return;
+            }
+
+            const now = Tone.now();
+            // Simple ascending chord or melody
+            try {
+                synth.triggerAttackRelease("C4", "8n", now);
+                synth.triggerAttackRelease("E4", "8n", now + 0.15);
+                synth.triggerAttackRelease("G4", "8n", now + 0.3);
+                synth.triggerAttackRelease("C5", "4n", now + 0.45);
+                 // console.log("Playing victory sound."); // DEBUG
+            } catch (e) {
+                console.error("Error playing victory sound:", e);
+            }
+        }
+
+
+        /**
+         * Ends the game and displays the final message, sparks, and sound.
+         * --- MODIFIED: Save score before showing message ---
+         */
+        function endGame() {
+            // console.log("Ending game. Final score:", score); // DEBUG
+            listeningForInput = false; // Stop listening
+            stopBackgroundMusic(); // Stop background music (HTML audio)
+            keyboardArea.classList.remove('visible'); // Hide keyboard if visible
+            scoreDisplay.classList.remove('visible', 'score-flash');
+            if (scoreFlashTimeout) clearTimeout(scoreFlashTimeout);
+
+            // --- MODIFIED: Check if score qualifies ---
+            finalScoreToSave = score; // Store the score temporarily
+            if (checkIfHighScore(finalScoreToSave)) {
+                 console.log("New high score!"); // DEBUG
+                 showNamePrompt(); // Show name prompt instead of game over message
+            } else {
+                 console.log("Score did not qualify for high scores."); // DEBUG
+                 showGameOverMessage(); // Show regular game over message
+            }
+        }
+
+        /**
+         * Checks if a score qualifies for the high score list.
+         * @param {number} currentScore - The score to check.
+         * @returns {boolean} True if the score qualifies, false otherwise.
+         */
+         function checkIfHighScore(currentScore) {
+             const highScores = loadHighScores();
+             // Qualifies if list has < MAX spots OR score is > lowest score on full list
+             return highScores.length < MAX_HIGH_SCORES || currentScore > (highScores[MAX_HIGH_SCORES - 1]?.score ?? 0);
+         }
+
+         /**
+          * Shows the name prompt overlay.
+          */
+         function showNamePrompt() {
+             playerNameInput.value = ''; // Clear previous name
+             namePromptOverlay.classList.add('visible');
+             // Focus the input field for convenience
+             setTimeout(() => playerNameInput.focus(), 100);
+         }
+
+         /**
+          * Handles the submission of the player's name.
+          */
+         function handleNameSubmit() {
+             const playerName = playerNameInput.value.trim() || "Anonymous"; // Default name
+             console.log(`Saving high score: ${playerName} - ${finalScoreToSave}`); // DEBUG
+             saveHighScore(playerName, finalScoreToSave); // Save name and score
+             namePromptOverlay.classList.remove('visible');
+             showGameOverMessage(); // Now show the game over message
+         }
+
+
+        /**
+         * Displays the final game over message.
+         */
+        function showGameOverMessage() {
+            const maxScore = totalWords * 2;
+            const percentage = maxScore > 0 ? (finalScoreToSave / maxScore) * 100 : 0;
+            let finalMessage = '';
+
+             if (percentage < 50) {
+                finalMessage = "נסו שוב";
+            } else if (percentage <= 74) {
+                finalMessage = "מאמץ יפה המשיכו אני מזהה את הפוטנציאל";
+            } else if (percentage <= 89) {
+                finalMessage = "אתם מצויינים עוד קצת ואתם בפסגה";
+            } else { // 90% - 100%
+                finalMessage = "מושלם אתם אשפי האנגלית";
+                // Trigger Victory Effects only if score was high enough
+                createSparks();
+                playVictorySound();
+            }
+
+            messageTitle.textContent = "Game Over!";
+            messageText.textContent = `Your score: ${finalScoreToSave} / ${maxScore}. ${finalMessage}`;
+            messageOverlay.classList.add('visible');
+        }
+
+
+        // --- Navigation Functions ---
+        function toggleMobileMenu() {
+            mobileNavMenu.classList.toggle('visible');
+        }
+
+        function showPage(pageId) {
+            console.log("Showing page:", pageId); // DEBUG
+            pages.forEach(page => {
+                page.classList.toggle('active', page.id === pageId);
+            });
+
+            // Update active link state
+            const allLinks = document.querySelectorAll('.nav-link');
+            allLinks.forEach(link => {
+                link.classList.toggle('active', link.dataset.page === pageId);
+            });
+
+            // Hide mobile menu after selection
+            mobileNavMenu.classList.remove('visible');
+
+            // Handle page-specific logic
+            if (pageId === 'game-page') {
+                // Ensure game elements are potentially visible
+                scoreDisplay.style.display = ''; // Or set based on flash logic
+                if(isTouchDevice) keyboardArea.classList.add('visible');
+                // Restart music if not muted
+                startAudio();
+            } else {
+                // Hide game-specific elements when not on game page
+                stopBackgroundMusic();
+                scoreDisplay.classList.remove('visible', 'score-flash');
+                 if (scoreFlashTimeout) clearTimeout(scoreFlashTimeout);
+                keyboardArea.classList.remove('visible');
+                milestoneNotification.classList.remove('visible');
+                messageOverlay.classList.remove('visible'); // Hide game over screen if navigating away
+                 checkpointOverlay.classList.remove('visible'); // Hide checkpoint screen if navigating away
+                 namePromptOverlay.classList.remove('visible'); // Hide name prompt if navigating away
+
+                 // Display high scores when showing that page
+                 if (pageId === 'high-scores-page') {
+                     displayHighScores();
+                 }
+            }
+        }
+
+        function handleNavClick(event) {
+            event.preventDefault(); // Prevent default anchor link behavior
+            const pageId = event.target.dataset.page;
+            if (pageId) {
+                showPage(pageId);
+            }
+        }
+
+        // --- High Score Functions ---
+
+        /**
+         * Loads high scores from localStorage.
+         * @returns {Array<{name: string, score: number}>} Array of high score objects.
+         */
+        function loadHighScores() {
+            try {
+                const scoresJSON = localStorage.getItem(HIGH_SCORES_KEY);
+                return scoresJSON ? JSON.parse(scoresJSON) : [];
+            } catch (error) {
+                console.error("Error loading high scores from localStorage:", error);
+                return []; // Return empty array on error
+            }
+        }
+
+        /**
+         * Saves a new score (with name) to localStorage.
+         * @param {string} name - The player's name.
+         * @param {number} newScore - The score to save.
+         */
+        function saveHighScore(name, newScore) {
+            if (typeof newScore !== 'number' || newScore < 0) return; // Basic validation
+
+            try {
+                const scores = loadHighScores();
+                scores.push({ name: name, score: newScore }); // Add new score object
+                scores.sort((a, b) => b.score - a.score); // Sort descending by score
+                const topScores = scores.slice(0, MAX_HIGH_SCORES); // Keep only top N
+                localStorage.setItem(HIGH_SCORES_KEY, JSON.stringify(topScores));
+                console.log("High scores saved:", topScores); // DEBUG
+            } catch (error) {
+                console.error("Error saving high score to localStorage:", error);
+            }
+        }
+
+        /**
+         * Displays the high scores list on the page.
+         * --- MODIFIED: Added " נקודות" ---
+         */
+        function displayHighScores() {
+            const scores = loadHighScores();
+            highScoresList.innerHTML = ''; // Clear previous list
+
+            if (scores.length === 0) {
+                noScoresMessage.style.display = 'block'; // Show message
+            } else {
+                noScoresMessage.style.display = 'none'; // Hide message
+                scores.forEach((scoreData, index) => {
+                    const li = document.createElement('li');
+                    li.classList.add('score-entry');
+
+                    const rankSpan = document.createElement('span');
+                    rankSpan.classList.add('rank');
+                    rankSpan.textContent = `${index + 1}.`; // Rank starts at 1
+
+                    const nameSpan = document.createElement('span');
+                    nameSpan.classList.add('player-name');
+                    nameSpan.textContent = scoreData.name; // Display name
+
+                    const scoreSpan = document.createElement('span');
+                    scoreSpan.classList.add('score-value');
+                    // --- MODIFIED: Append " נקודות" ---
+                    scoreSpan.textContent = `${scoreData.score} נקודות`; // Display score with text
+
+                    // Add special styling for top 3
+                    if (index === 0) li.classList.add('rank-1');
+                    else if (index === 1) li.classList.add('rank-2');
+                    else if (index === 2) li.classList.add('rank-3');
+
+                    li.appendChild(rankSpan);
+                    li.appendChild(nameSpan); // Add name span
+                    li.appendChild(scoreSpan);
+                    highScoresList.appendChild(li);
+                });
+            }
+        }
+
+
+        // --- Event Listeners ---
+        restartButton.addEventListener('click', () => {
+             showPage('game-page'); // Ensure game page is visible before starting
+             startGame();
+        });
+
+        // --- Initial Game Start ---
+        window.onload = () => {
+            try {
+                startGame(); // Initial setup and first load
+            } catch (error) {
+                console.error("Error during initial game load:", error);
+                // Display a user-friendly error message if possible
+                alert("An error occurred while loading the game. Please refresh the page.");
+            }
+        };
+
+    </script>
+
+</body>
+</html>
