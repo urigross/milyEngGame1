@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ניחוש אות ראשונה ואחרונה (ציונים גבוהים)</title>
+    <title>ניחוש אות ראשונה ואחרונה (ללא שמע)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <style>
         /* Custom styles */
         body {
@@ -122,14 +121,17 @@
              margin: 0 auto;
         }
 
+        /* Game container visible by default again */
         .game-container {
-            display: flex;
+            display: flex; /* Show by default */
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
             padding: 20px 20px 150px 20px; /* Adjust padding */
             position: relative;
         }
+        /* Removed .game-container.visible */
+
         .about-container {
              padding: 40px 20px;
              background-color: #fff;
@@ -460,16 +462,7 @@
                 margin-top: 0;
                 margin-right: 0;
             }
-             #sound-toggle-button {
-                 top: 40px;
-                 left: 20px;
-                 width: 36px;
-                 height: 36px;
-             }
-             #sound-toggle-button svg {
-                 width: 20px;
-                 height: 20px;
-             }
+             /* --- REMOVED: Sound button mobile styles --- */
 
             .prompt {
                 font-size: 1rem;
@@ -503,6 +496,7 @@
                  font-size: 1.2rem;
                  padding: 10px 20px;
              }
+             /* --- REMOVED: Start button mobile styles --- */
         }
 
 
@@ -702,36 +696,7 @@
             visibility: visible;
         }
 
-        /* Sound Toggle Button */
-        #sound-toggle-button {
-            position: absolute;
-            top: 60px;
-            left: 20px;
-            width: 40px;
-            height: 40px;
-            background-color: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(5px);
-            border-radius: 50%;
-            border: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            z-index: 1001; /* Above header background but below menu */
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            transition: background-color 0.2s ease;
-        }
-        #sound-toggle-button:hover {
-             background-color: rgba(255, 255, 255, 0.9);
-        }
-        #sound-toggle-button svg {
-            width: 24px;
-            height: 24px;
-            fill: #334155;
-        }
-        #sound-toggle-button .icon-muted { display: none; }
-        #sound-toggle-button.muted .icon-muted { display: inline-block; }
-        #sound-toggle-button.muted .icon-on { display: none; }
+        /* --- REMOVED: Sound Toggle Button Styles --- */
 
 
         /* --- Animations --- */
@@ -762,16 +727,13 @@
         .anim-bounceIn { animation-name: bounceIn; }
         .anim-rubberBand { animation-name: rubberBand; }
 
+        /* --- REMOVED: Start Button Styles --- */
+
     </style>
 </head>
 <body class="bg-gray-100">
 
     <header id="main-header">
-         <button id="sound-toggle-button" title="Toggle Sound">
-            <svg class="icon-on" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 4.06c0-1.34 1.61-2.24 2.79-1.46l3.87 2.58c.49.33.74.91.74 1.52v10.72c0 .61-.25 1.19-.74 1.52l-3.87 2.58c-1.18.78-2.79-.12-2.79-1.46v-1.73a10.01 10.01 0 0 1-3.18-1.57 1 1 0 0 1-.32-1.43 1 1 0 0 1 1.43-.32 8 8 0 0 0 2.07.99V12c0-.97.58-1.81 1.45-2.18a13.99 13.99 0 0 1 2.55-3.94V4.06ZM3 10a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-4Zm4.5-1.03a1 1 0 0 1 1.41 0 4 4 0 0 1 0 6.06 1 1 0 0 1-1.41-1.41 2 2 0 0 0 0-3.24 1 1 0 0 1 0-1.41Z"/></svg>
-            <svg class="icon-muted" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 4.06c0-1.34 1.61-2.24 2.79-1.46l3.87 2.58c.49.33.74.91.74 1.52v10.72c0 .61-.25 1.19-.74 1.52l-3.87 2.58c-1.18.78-2.79-.12-2.79-1.46V4.06ZM3 10a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-4Zm9.96 2 3.54 3.54a1 1 0 0 1-1.42 1.42L11.54 13.4a1 1 0 0 1 0-1.42l3.54-3.54a1 1 0 1 1 1.42 1.42L12.96 12Z"/></svg>
-        </button>
-
          <nav id="main-nav">
              <a href="#game" class="nav-link active" data-page="game-page">שחק במשחק</a>
              <a href="#highscores" class="nav-link" data-page="high-scores-page">לוח השיאים</a>
@@ -789,8 +751,7 @@
          <a href="#about" class="nav-link" data-page="about-page">אודות המשחק</a>
     </nav>
 
-    <main id="game-page" class="active"> <div class="game-container">
-            <div id="score" class="score-display">0</div>
+    <main id="game-page" class="active"> <div class="game-container visible"> <div id="score" class="score-display">0</div>
             <div class="word-card">
                  <div id="correct-word-overlay" class="correct-word-overlay"></div>
                 <img id="image-display" class="image-display" src="" alt="Guess the word for this image" >
@@ -851,11 +812,6 @@
 
     <div id="milestone-notification">10 Points!!!</div>
 
-    <audio id="bg-music" loop>
-        <source src="assets/mp3/1.mp3" type="audio/mpeg">
-        Your browser does not support the audio element.
-    </audio>
-
     <script>
         // --- DOM Elements ---
         const imageDisplay = document.getElementById('image-display');
@@ -872,8 +828,8 @@
         const messageText = document.getElementById('message-text');
         const restartButton = document.getElementById('restart-button');
         const milestoneNotification = document.getElementById('milestone-notification');
-        const bgMusicElement = document.getElementById('bg-music');
-        const soundToggleButton = document.getElementById('sound-toggle-button');
+        // const bgMusicElement = document.getElementById('bg-music'); // Removed
+        // const soundToggleButton = document.getElementById('sound-toggle-button'); // Removed
         const hamburgerButton = document.getElementById('hamburger-button');
         const mobileNavMenu = document.getElementById('mobile-nav-menu');
         const mainNavLinks = document.querySelectorAll('#main-nav .nav-link');
@@ -887,7 +843,10 @@
         const namePromptOverlay = document.getElementById('name-prompt-overlay');
         const playerNameInput = document.getElementById('player-name-input');
         const submitNameButton = document.getElementById('submit-name-button');
-        const correctWordOverlay = document.getElementById('correct-word-overlay'); // Get the new overlay div
+        const correctWordOverlay = document.getElementById('correct-word-overlay');
+        // const startGameButton = document.getElementById('start-game-button'); // Removed
+        // const startContainer = document.getElementById('start-container'); // Removed
+        const gamePageContainer = document.getElementById('game-page');
 
 
         // --- Game Configuration ---
@@ -981,74 +940,83 @@
         let isTouchDevice = false; // Flag for touch device detection
         let toneStarted = false; // Flag to ensure Tone.js starts only once
         let scoreFlashTimeout = null; // Timeout ID for score flash
-        let musicPlaying = false; // Flag for HTML audio state
-        let isMuted = false; // --- NEW: Mute state ---
-        let finalScoreToSave = 0; // --- NEW: Store score temporarily before saving name ---
+        // let musicPlaying = false; // Removed
+        let isMuted = false;
+        let finalScoreToSave = 0;
 
         // --- Tone.js Setup (Sound Effects Only) ---
-        const synth = new Tone.PolySynth(Tone.Synth, {
-             oscillator: { type: "sine" },
-             envelope: { attack: 0.01, decay: 0.1, sustain: 0.3, release: 0.5 }
-        }).toDestination();
-        const correctSoundSynth = new Tone.Synth({ // Synth for correct sound
-            oscillator: { type: "triangle" },
-            volume: -5, // Slightly louder correct sound
-            envelope: { attack: 0.01, decay: 0.1, sustain: 0.1, release: 0.2 }
-        }).toDestination();
-        const incorrectSoundSynth = new Tone.Synth({ // Synth for incorrect sound
-            oscillator: { type: "square" },
-             volume: -10,
-            envelope: { attack: 0.01, decay: 0.2, sustain: 0, release: 0.1 }
-        }).toDestination();
-        // --- Background Music Synths Removed ---
-
+        let synth;
+        let correctSoundSynth;
+        let incorrectSoundSynth;
 
         // --- Functions ---
 
         /**
-         * Attempts to start the Tone.js audio context for sound effects.
-         * Attempts to play the HTML audio element for background music.
+         * Initializes Tone.js synthesizers after context is ready.
          */
-        async function startAudio() {
-            // Start Tone.js context if needed
+        function initializeSynths() {
+             if (typeof Tone === 'undefined') {
+                 console.error("Tone.js not loaded, cannot initialize synths.");
+                 return;
+             }
+            if (!synth) {
+                 synth = new Tone.PolySynth(Tone.Synth, {
+                     oscillator: { type: "sine" },
+                     envelope: { attack: 0.01, decay: 0.1, sustain: 0.3, release: 0.5 }
+                 }).toDestination();
+            }
+             if (!correctSoundSynth) {
+                 correctSoundSynth = new Tone.Synth({
+                     oscillator: { type: "triangle" },
+                     volume: -5,
+                     envelope: { attack: 0.01, decay: 0.1, sustain: 0.1, release: 0.2 }
+                 }).toDestination();
+             }
+              if (!incorrectSoundSynth) {
+                  incorrectSoundSynth = new Tone.Synth({
+                      oscillator: { type: "square" },
+                      volume: -10,
+                      envelope: { attack: 0.01, decay: 0.2, sustain: 0, release: 0.1 }
+                  }).toDestination();
+              }
+             console.log("Tone.js Synths Initialized");
+             Tone.Destination.mute = isMuted; // Apply mute state after init
+        }
+
+        /**
+         * Attempts to start the Tone.js audio context.
+         * --- MODIFIED: Returns true/false ---
+         */
+        async function startAudioContextIfNeeded() {
+             if (typeof Tone === 'undefined') {
+                 console.error("Tone.js not loaded, cannot start audio context.");
+                 return false; // Indicate failure
+             }
             if (!toneStarted && Tone.context.state !== 'running') {
                 console.log("Attempting to start audio context..."); // DEBUG
                 try {
                     await Tone.start();
                     toneStarted = true;
-                     Tone.Destination.mute = isMuted;
+                    initializeSynths(); // Initialize synths after context starts
                     console.log("Audio context started successfully."); // DEBUG
+                    return true; // Indicate success
                 } catch (e) {
                     console.error("Failed to start Tone.js audio context:", e);
+                    return false; // Indicate failure
                 }
+            } else if (toneStarted && !synth) { // If context started but synths not ready
+                 initializeSynths();
             }
-            // Attempt to play background music only if not muted and on game page
-            if (document.getElementById('game-page').classList.contains('active') && bgMusicElement && bgMusicElement.paused && !musicPlaying && !isMuted) {
-                 console.log("Attempting to play background music..."); // DEBUG
-                 try {
-                     // Set volume before playing
-                     bgMusicElement.volume = 0.3; // Adjust volume (0.0 to 1.0)
-                     await bgMusicElement.play();
-                     musicPlaying = true;
-                     console.log("Background music playing."); // DEBUG
-                 } catch (error) {
-                     console.warn("Background music autoplay failed:", error);
-                     // Autoplay was likely prevented, user might need to interact more
-                 }
-            }
+            return toneStarted; // Return current status
         }
 
         /**
-         * Stops the HTML audio element.
+         * --- REMOVED: playBackgroundMusic function ---
          */
-        function stopBackgroundMusic() {
-            if (bgMusicElement && !bgMusicElement.paused) {
-                bgMusicElement.pause();
-                bgMusicElement.currentTime = 0; // Reset to beginning
-                musicPlaying = false;
-                console.log("Background music stopped.");
-            }
-        }
+
+        /**
+         * --- REMOVED: stopBackgroundMusic function ---
+         */
 
 
         /**
@@ -1129,11 +1097,11 @@
 
 
         /**
-         * Initializes or restarts the game.
+         * Initializes the game state and UI elements. Does not start audio.
          */
-        function startGame() {
-            console.log("Starting game..."); // DEBUG
-            stopBackgroundMusic(); // Stop music from previous game if any
+        function initializeGame() {
+            console.log("Initializing game state..."); // DEBUG
+            // stopBackgroundMusic(); // Removed
 
             detectTouch(); // Detect touch capability
             console.log("Is touch device:", isTouchDevice); // DEBUG
@@ -1154,8 +1122,8 @@
             if (scoreFlashTimeout) clearTimeout(scoreFlashTimeout);
             updateScoreDisplay();
 
-            soundToggleButton.classList.toggle('muted', isMuted);
-            bgMusicElement.muted = isMuted; // Ensure HTML audio matches mute state
+            // soundToggleButton.classList.toggle('muted', isMuted); // Removed
+            // bgMusicElement.muted = isMuted; // Removed
 
             if (isTouchDevice) {
                 console.log("Creating on-screen keyboard"); // DEBUG
@@ -1168,6 +1136,7 @@
 
             loadWord(); // Load the first word
 
+            // Add event listeners (listeners for buttons outside game page are added onload)
             hiddenInput.removeEventListener('input', handleTextInput);
             hiddenInput.addEventListener('input', handleTextInput);
 
@@ -1177,65 +1146,19 @@
             promptDisplay.removeEventListener(focusTrigger, focusHiddenInput);
             promptDisplay.addEventListener(focusTrigger, focusHiddenInput);
 
-            soundToggleButton.removeEventListener('click', toggleMute); // Remove old listener if any
-            soundToggleButton.addEventListener('click', toggleMute);
-
-            // --- Navigation Listeners ---
-            mainNavLinks.forEach(link => link.removeEventListener('click', handleNavClick));
-            mobileNavLinks.forEach(link => link.removeEventListener('click', handleNavClick));
-            hamburgerButton.removeEventListener('click', toggleMobileMenu);
-
-            mainNavLinks.forEach(link => link.addEventListener('click', handleNavClick));
-            mobileNavLinks.forEach(link => link.addEventListener('click', handleNavClick));
-            hamburgerButton.addEventListener('click', toggleMobileMenu);
-
-             // --- Checkpoint Listeners ---
-             checkpointContinueButton.removeEventListener('click', handleCheckpointContinue);
-             checkpointFinishButton.removeEventListener('click', handleCheckpointFinish);
-             checkpointContinueButton.addEventListener('click', handleCheckpointContinue);
-             checkpointFinishButton.addEventListener('click', handleCheckpointFinish);
-
-             // --- Name Prompt Listener ---
-             submitNameButton.removeEventListener('click', handleNameSubmit);
-             submitNameButton.addEventListener('click', handleNameSubmit);
-
-
-             // Show the game page initially
-            showPage('game-page');
-
-            console.log("Game setup complete."); // DEBUG
+            console.log("Game initialization complete."); // DEBUG
         }
 
         /**
-         * Toggles mute state for all sounds.
+         * --- REMOVED: toggleMute function ---
          */
-        function toggleMute() {
-            isMuted = !isMuted;
-            console.log("Mute toggled:", isMuted); // DEBUG
-            soundToggleButton.classList.toggle('muted', isMuted); // Update button icon
-
-            // Mute/unmute Tone.js effects
-            if (toneStarted) {
-                 Tone.Destination.mute = isMuted;
-            }
-
-            // Mute/unmute HTML background audio
-            bgMusicElement.muted = isMuted;
-            if (!isMuted && bgMusicElement.paused && document.getElementById('game-page').classList.contains('active')) {
-                // If unmuting, music was paused, AND we are on the game page, try to play it
-                startAudio();
-            } else if (isMuted && !bgMusicElement.paused){
-                 // If muting and music was playing, pause it
-                 stopBackgroundMusic(); // Use stop function to also reset flag
-            }
-        }
 
 
         /**
-         * Focuses the hidden input field and attempts to start audio context.
+         * Focuses the hidden input field.
+         * --- MODIFIED: Does NOT attempt to start audio here ---
          */
         function focusHiddenInput() {
-             startAudio(); // Attempt to start audio on first interaction
             if (listeningForInput && guessingStage !== 'done' && !isTouchDevice) {
                  console.log("Focusing hidden input (non-touch)"); // DEBUG
                 hiddenInput.focus();
@@ -1406,16 +1329,7 @@
                         slots[index].classList.remove('correct', 'incorrect');
                     }
                 }, 300);
-                 // Play Sound Effect (check mute state)
-                if (toneStarted && !isMuted) { // Check isMuted
-                    try {
-                        if (correct) {
-                            correctSoundSynth.triggerAttackRelease("C5", "16n", Tone.now()); // Higher pitch for correct
-                        } else {
-                            incorrectSoundSynth.triggerAttackRelease("A2", "8n", Tone.now()); // Lower pitch for incorrect
-                        }
-                    } catch(e) { console.error("Sound effect error:", e); }
-                }
+                 // --- REMOVED: Sound Effect Playing Logic ---
             } else {
                 console.warn(`Could not find slot at index ${index} to provide feedback.`); // DEBUG
             }
@@ -1427,7 +1341,8 @@
          * @param {InputEvent} event - The input event object.
          */
         function handleTextInput(event) {
-            startAudio(); // Attempt to start audio on first interaction
+            // startAudioContextIfNeeded(); // Removed
+            // playBackgroundMusic(); // Removed
             if (!listeningForInput || guessingStage === 'done') return;
 
             const guessedLetter = event.target.value.toLowerCase();
@@ -1444,7 +1359,8 @@
          * @param {string} letter - The letter from the clicked button.
          */
         function handleOnScreenKeyPress(letter) {
-             startAudio(); // Attempt to start audio on first interaction
+             // startAudioContextIfNeeded(); // Removed
+             // playBackgroundMusic(); // Removed
              if (!listeningForInput || guessingStage === 'done') return;
              // console.log(`On-screen keyboard input: ${letter}`); // DEBUG
              processGuess(letter.toLowerCase());
@@ -1472,7 +1388,7 @@
                 } else {
                     firstLetterCorrect = false;
                 }
-                provideSlotFeedback(0, correct); // Provide feedback & sound
+                provideSlotFeedback(0, correct); // Provide feedback (no sound)
 
                 guessingStage = 'last';
                 promptDisplay.textContent = 'Guess the LAST letter'; // Text Updated
@@ -1497,7 +1413,7 @@
                 } else {
                     lastLetterCorrect = false;
                 }
-                 provideSlotFeedback(lastIndex, correct); // Provide feedback & sound
+                 provideSlotFeedback(lastIndex, correct); // Provide feedback (no sound)
 
                 guessingStage = 'done';
                 updateGuessArea(); // Update to show final guess, remove highlight
@@ -1552,7 +1468,7 @@
          */
         function showCheckpointPrompt() {
             console.log("Showing checkpoint prompt"); // DEBUG
-            stopBackgroundMusic(); // Pause music during prompt
+            // stopBackgroundMusic(); // Removed
             checkpointOverlay.classList.add('visible');
         }
 
@@ -1564,7 +1480,7 @@
             checkpointOverlay.classList.remove('visible');
             currentWordIndex++; // Move to the next word index
             loadWord(); // Load the next word
-            startAudio(); // Resume music if not muted
+            // playBackgroundMusic(); // Removed
         }
 
         /**
@@ -1611,26 +1527,8 @@
         }
 
         /**
-         * Plays a simple victory sound using Tone.js.
+         * --- REMOVED: playVictorySound function ---
          */
-        function playVictorySound() {
-            if (!toneStarted || isMuted) { // Check mute state
-                console.warn("Audio context not started or muted, cannot play victory sound."); // DEBUG
-                return;
-            }
-
-            const now = Tone.now();
-            // Simple ascending chord or melody
-            try {
-                synth.triggerAttackRelease("C4", "8n", now);
-                synth.triggerAttackRelease("E4", "8n", now + 0.15);
-                synth.triggerAttackRelease("G4", "8n", now + 0.3);
-                synth.triggerAttackRelease("C5", "4n", now + 0.45);
-                 // console.log("Playing victory sound."); // DEBUG
-            } catch (e) {
-                console.error("Error playing victory sound:", e);
-            }
-        }
 
 
         /**
@@ -1640,7 +1538,7 @@
         function endGame() {
             // console.log("Ending game. Final score:", score); // DEBUG
             listeningForInput = false; // Stop listening
-            stopBackgroundMusic(); // Stop background music (HTML audio)
+            // stopBackgroundMusic(); // Removed
             keyboardArea.classList.remove('visible'); // Hide keyboard if visible
             scoreDisplay.classList.remove('visible', 'score-flash');
             if (scoreFlashTimeout) clearTimeout(scoreFlashTimeout);
@@ -1707,7 +1605,7 @@
                 finalMessage = "מושלם אתם אשפי האנגלית";
                 // Trigger Victory Effects only if score was high enough
                 createSparks();
-                playVictorySound();
+                // playVictorySound(); // Removed
             }
 
             messageTitle.textContent = "Game Over!";
@@ -1739,13 +1637,13 @@
             // Handle page-specific logic
             if (pageId === 'game-page') {
                 // Ensure game elements are potentially visible
+                 gamePageContainer.classList.add('visible'); // Make sure game container is visible
                 scoreDisplay.style.display = ''; // Or set based on flash logic
                 if(isTouchDevice) keyboardArea.classList.add('visible');
-                // Restart music if not muted
-                startAudio();
+                // --- REMOVED: Music start call ---
             } else {
                 // Hide game-specific elements when not on game page
-                stopBackgroundMusic();
+                // stopBackgroundMusic(); // Removed
                 scoreDisplay.classList.remove('visible', 'score-flash');
                  if (scoreFlashTimeout) clearTimeout(scoreFlashTimeout);
                 keyboardArea.classList.remove('visible');
@@ -1851,18 +1749,32 @@
         // --- Event Listeners ---
         restartButton.addEventListener('click', () => {
              showPage('game-page'); // Ensure game page is visible before starting
-             startGame();
+             initializeGame(); // Use initializeGame for restart
         });
 
-        // --- Initial Game Start ---
+        // --- Initial Setup ---
         window.onload = () => {
-            try {
-                startGame(); // Initial setup and first load
-            } catch (error) {
-                console.error("Error during initial game load:", error);
-                // Display a user-friendly error message if possible
-                alert("An error occurred while loading the game. Please refresh the page.");
-            }
+            // Setup navigation first
+            mainNavLinks.forEach(link => link.addEventListener('click', handleNavClick));
+            mobileNavLinks.forEach(link => link.addEventListener('click', handleNavClick));
+            hamburgerButton.addEventListener('click', toggleMobileMenu);
+            // soundToggleButton.addEventListener('click', toggleMute); // Removed
+            checkpointContinueButton.addEventListener('click', handleCheckpointContinue);
+            checkpointFinishButton.addEventListener('click', handleCheckpointFinish);
+            submitNameButton.addEventListener('click', handleNameSubmit);
+            restartButton.addEventListener('click', () => { // Restart button in game over
+                showPage('game-page');
+                initializeGame();
+            });
+
+            // --- MODIFIED: Initialize game directly, no start button ---
+            console.log("Page loaded, initializing game UI.");
+            initializeGame(); // Initialize game state and UI
+            showPage('game-page'); // Show the game page immediately
+
+             // --- REMOVED: Listener for first interaction to start audio ---
+             // Audio context is now started within the first guess/toggle event
+
         };
 
     </script>
