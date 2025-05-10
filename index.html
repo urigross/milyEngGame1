@@ -3,171 +3,253 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ניחוש אות ראשונה ואחרונה (ללא שמע)</title>
+    <title>ניחוש אותיות ומילים (עם לוח שיאים)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Custom styles */
         body {
             font-family: 'Assistant', 'Inter', sans-serif;
             user-select: none;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            overflow-y: auto;
-            background-color: #f0f4f8;
-            position: relative;
-            min-height: 100vh;
-            padding-top: 70px; /* Add padding for fixed header */
+            -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none;
+            overflow-y: auto; background-color: #f0f4f8; position: relative; min-height: 100vh;
+            padding-top: 70px; 
         }
 
-        /* --- Header and Navigation --- */
-        #main-header {
-            position: fixed; /* Keep header fixed at the top */
-            top: 0;
-            left: 0; /* Keep left for RTL consistency in positioning */
-            right: 0; /* Ensure it spans full width */
-            width: 100%;
+        #global-nav {
+            position: fixed; top: 0; left: 0; right: 0;
+            background-color: #1e293b; padding: 10px 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 1100;
+            display: flex; justify-content: center; align-items: center;
+        }
+        #global-nav .nav-link {
+            color: #f1f5f9; text-decoration: none; padding: 8px 15px;
+            margin: 0 10px; border-radius: 6px; font-weight: 600;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+        #global-nav .nav-link:hover { background-color: #334155; color: white; }
+        #global-nav .nav-link.active-nav { background-color: #4f46e5; color: white; }
+
+        main { display: none; width: 100%; }
+        main.active { display: block; }
+
+        .game-container, .mini-game-container, .leaderboard-container {
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+            padding: 20px 20px 150px 20px; position: relative; min-height: calc(100vh - 70px);
+        }
+        .word-card {
+            width: 90%; max-width: 700px; height: 300px; background-color: #ffffff;
+            border-radius: 16px; box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 20px; overflow: hidden; position: relative; 
+            border: 1px solid #e2e8f0; padding: 10px; transition: box-shadow 0.3s ease-out;
+        }
+        .correct-word-overlay {
+            position: absolute; top: 10px; left: 10px; background-color: rgba(0, 0, 0, 0.75);
+            color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.9rem;
+            font-weight: bold; z-index: 10; display: none; direction: ltr;
+        }
+        .image-display {
+            max-width: 100%; max-height: 100%; object-fit: contain;
+            display: none; animation-duration: 0.8s; animation-fill-mode: both;
+        }
+        .text-display {
+            font-size: 3rem; font-weight: bold; color: #334155; text-align: center;
+            padding: 20px; display: none; animation-duration: 0.8s; animation-fill-mode: both;
+            max-width: 100%; word-wrap: break-word;
+        }
+        .text-display.fallback { font-size: 1.5rem; color: #94a3b8; font-weight: normal; }
+
+        .guess-area {
+            width: 90%; max-width: 700px; min-height: 50px; background-color: #e2e8f0;
+            border-radius: 8px; display: flex; align-items: center; justify-content: center;
+            flex-wrap: wrap; gap: 0.3em; padding: 10px 15px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.06); margin-bottom: 15px; 
+            cursor: pointer; direction: ltr;
+        }
+        .guess-slot {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 1.5em; height: 1.5em; font-size: 24px; font-family: monospace;
+            color: #1e293b; background-color: #cbd5e1; border-radius: 4px;
+            text-align: center; line-height: 1.5em;
+            transition: background-color 0.2s ease, border 0.2s ease; border: 2px solid transparent;
+        }
+        .guess-slot.active-guess { border: 2px solid transparent; background-color: #eff6ff; animation: blinking-border 1s infinite; }
+        @keyframes blinking-border { 0%, 100% { border-color: #86efac; } 50% { border-color: transparent; } }
+        .guess-slot.correct { background-color: #dcfce7; border-color: #22c55e; color: #166534; animation: none; }
+        .guess-slot.incorrect { background-color: #fee2e2; border-color: #ef4444; color: #991b1b; animation: none; }
+
+        .hidden-input { position: absolute; opacity: 0; pointer-events: none; width: 1px; height: 1px; left: -9999px; }
+
+        #keyboard-area {
+            display: none; flex-direction: column; align-items: center; gap: 6px;
+            width: 100%; max-width: 700px; padding: 10px; margin-top: 10px;
+            position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%);
+            background-color: rgba(240, 244, 248, 0.9); padding: 15px; border-radius: 8px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index: 50; direction: ltr;
+        }
+        .keyboard-row { display: flex; justify-content: center; gap: 6px; width: 100%; }
+        #keyboard-area.visible { display: flex; }
+        #keyboard-area button {
+            font-family: 'Inter', sans-serif; font-weight: bold; font-size: 1.1rem;
+            flex-grow: 1; flex-basis: 0; max-width: 45px; height: 45px;
+            border: none; border-radius: 6px; background-color: #ffffff; color: #334155;
+            cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: background-color 0.15s ease, transform 0.1s ease;
+            display: flex; align-items: center; justify-content: center; padding: 0 5px;
+        }
+        #keyboard-area button:active { background-color: #e2e8f0; transform: scale(0.95); }
+        .key-highlight { background-color: #f9a8d4 !important; transition: background-color 0.3s ease; }
+
+        #hint-button, #manual-end-game-button { 
+            color: white; font-weight: bold;
+            padding: 8px 16px; border-radius: 6px; margin-bottom: 15px; 
+            transition: background-color 0.2s ease, opacity 0.2s ease; cursor: pointer;
+            margin-right: 10px; 
+        }
+        #hint-button { background-color: #f59e0b; }
+        #hint-button:hover:not(:disabled) { background-color: #d97706; }
+        #hint-button:disabled { background-color: #a1a1aa; cursor: not-allowed; opacity: 0.7; }
+
+        #manual-end-game-button { background-color: #ef4444; }
+        #manual-end-game-button:hover { background-color: #dc2626; }
+        #manual-end-game-button:disabled { background-color: #a1a1aa; cursor: not-allowed; opacity: 0.7; }
+
+        .score-display {
+            position: absolute; top: 20px; right: 20px; font-size: 40px; font-weight: bold;
+            padding: 5px 10px; border-radius: 8px; background-color: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(5px); z-index: 100; opacity: 0; visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .score-display.visible { opacity: 1; visibility: visible; }
+        .score-flash { animation: flashScore 0.5s ease-in-out 3; }
+        @keyframes flashScore { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+
+        .prompt, #mini-game-instruction { font-size: 1.2rem; color: #475569; margin-bottom: 15px; font-weight: 500; text-align: center; }
+
+        .overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7);
+            display: flex; align-items: center; justify-content: center; z-index: 1000;
+            opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; overflow: hidden;
+        }
+        .overlay.visible { opacity: 1; visibility: visible; }
+
+        .message-box { 
+            background-color: white; padding: 30px; border-radius: 16px; text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2); max-width: 90%; position: relative; z-index: 1001;
+        }
+        #message-overlay .message-box h2 { font-size: 1.5rem; font-weight: bold; color: #1e293b; margin-bottom: 10px; } 
+        #message-overlay .message-box p { font-size: 1rem; color: #475569; margin-bottom: 15px; } 
+        #message-overlay .message-box .button-group { 
+            display: flex; justify-content: center; gap: 10px; margin-top: 10px;
+        }
+        #message-overlay .message-box button { 
+            background-color: #3b82f6; color: white; padding: 10px 20px; border: none; border-radius: 8px;
+            font-size: 0.9rem; font-weight: bold; cursor: pointer; transition: background-color 0.2s ease;
+        }
+        #message-overlay .message-box button:hover { background-color: #2563eb; }
+        #leaderboard-button { background-color: #6366f1; }
+        #leaderboard-button:hover { background-color: #4f46e5; }
+
+        #checkpoint-overlay .message-box p { font-size: 1.1rem; color: #334155; margin-bottom: 25px; font-weight: 500; }
+        #checkpoint-overlay .button-group { display: flex; justify-content: center; gap: 15px; }
+        #checkpoint-overlay .message-box button { 
+            padding: 10px 25px; border-radius: 8px; font-size: 1rem; font-weight: bold;
+            cursor: pointer; transition: background-color 0.2s ease, box-shadow 0.2s ease; border: 1px solid transparent;
+        }
+        #checkpoint-continue-button { background-color: #10b981; color: white; }
+        #checkpoint-continue-button:hover { background-color: #059669; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        #checkpoint-finish-button { background-color: #ef4444; color: white; }
+        #checkpoint-finish-button:hover { background-color: #dc2626; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+
+        #name-prompt-overlay .message-box p { font-size: 1.1rem; color: #334155; margin-bottom: 15px; font-weight: 500; }
+        #name-prompt-overlay .message-box input[type="text"] {
+             display: block; width: 80%; max-width: 250px; margin: 0 auto 20px auto; padding: 10px;
+             border: 1px solid #cbd5e1; border-radius: 6px; font-size: 1rem; text-align: center;
+        }
+        #name-prompt-overlay .message-box button { 
+            background-color: #3b82f6; color: white; padding: 10px 25px; border: none; border-radius: 8px;
+            font-size: 1rem; font-weight: bold; cursor: pointer; transition: background-color 0.2s ease;
+        }
+        #name-prompt-overlay .message-box button:hover { background-color: #2563eb; }
+
+        #correct-word-prompt-overlay .message-box p {
+            font-size: 1.2rem;
+            color: #1e293b;
+            line-height: 1.7;
+        }
+        #revealed-word-span { /* Style for the revealed word */
+            font-weight: bold;
+            color: #2563eb; /* blue-600 */
+            font-size: 1.4rem;
+            direction: ltr; /* Ensure English word is displayed LTR */
+            display: inline-block; /* Allows margin/padding if needed */
+            margin: 0 5px;
+        }
+
+
+        /* Mini-Game Styles */
+        #word-group-display {
+            display: flex; flex-direction: column; align-items: center;
+            gap: 10px; margin-bottom: 20px; width: 100%; max-width: 400px; 
+        }
+        .word-group-item {
+            display: flex; align-items: center; background-color: #fff;
+            padding: 10px 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.07);
+            width: 100%; cursor: pointer; transition: background-color 0.2s ease, transform 0.1s ease;
+            border: 2px solid transparent;
+        }
+        .word-group-item:hover { background-color: #f0f9ff; }
+        .word-group-item.selected { border-color: #3b82f6; transform: scale(1.02); }
+        .word-group-item.correct-mini-game { background-color: #dcfce7 !important; border-color: #22c55e !important; }
+        .word-group-item.incorrect-mini-game { background-color: #fee2e2 !important; border-color: #ef4444 !important; }
+        .word-group-item-number { font-weight: bold; color: #64748b; margin-left: 10px; font-size: 1.1rem; }
+        .word-group-item-text { flex-grow: 1; text-align: right; font-size: 1.2rem; color: #1e293b; }
+        
+        #play-word-sound-button {
+            background-color: #3b82f6; color: white; font-weight: bold;
+            padding: 10px 20px; border-radius: 6px; margin-bottom: 20px;
+            transition: background-color 0.2s ease; cursor: pointer;
+        }
+        #play-word-sound-button:hover { background-color: #2563eb; }
+        #play-word-sound-button:disabled { background-color: #a1a1aa; cursor: not-allowed; }
+        
+        #mini-game-feedback { font-size: 1.1rem; font-weight: bold; min-height: 2em; margin-top: 10px; }
+        .feedback-correct { color: #16a34a; }
+        .feedback-incorrect { color: #dc2626; }
+
+        /* Leaderboard Styles */
+        .leaderboard-container h1 {
+             font-size: 2.5rem; 
+             font-weight: bold;
+             color: #1e293b; 
+             margin-bottom: 20px; 
+             text-align: center;
+        }
+        #high-scores-header { 
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            padding: 10px 20px;
-            background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent white */
-            backdrop-filter: blur(8px);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            z-index: 1000; /* Ensure header is on top */
-        }
-
-        #hamburger-button {
-            display: none; /* Hidden by default, shown on mobile */
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 5px;
-            z-index: 1002; /* Ensure hamburger is above transparent menu */
-        }
-         #hamburger-button svg {
-             width: 28px;
-             height: 28px;
-             fill: #334155;
-         }
-
-        #main-nav {
-            display: flex; /* Visible by default on desktop */
-            gap: 20px;
-        }
-         #main-nav a {
-             text-decoration: none;
-             color: #3b82f6;
-             font-weight: 600;
-             padding: 5px 0;
-             border-bottom: 2px solid transparent;
-             transition: border-color 0.2s ease;
-         }
-         #main-nav a:hover, #main-nav a.active {
-             border-bottom-color: #3b82f6;
-         }
-
-        /* Mobile Navigation Menu (Hidden by default) */
-        #mobile-nav-menu {
-            display: none;
-            position: fixed;
-            top: 60px; /* Below header */
-            left: 0;
+            padding: 10px 15px;
+            margin: 0 auto 10px auto; 
             width: 100%;
-            background-color: transparent;
-            z-index: 999; /* Below header */
-            padding: 15px 0;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
+            max-width: 500px;
+            background-color: #e2e8f0; 
+            border-radius: 8px;
+            font-weight: bold;
+            color: #334155; 
         }
-        #mobile-nav-menu.visible {
-            display: flex;
-        }
-         #mobile-nav-menu a {
-             text-decoration: none;
-             color: #3b82f6;
-             font-weight: 600;
-             font-size: 1.1rem;
-             padding: 10px 20px;
-             width: 80%; /* Give links some width */
-             max-width: 300px;
-             text-align: center;
-             background-color: rgba(255, 255, 255, 0.9); /* Add slight background to links */
-             border-radius: 8px;
-             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-         }
-         #mobile-nav-menu a:hover {
-             background-color: #eef2ff; /* Light blue hover */
-         }
+        #high-scores-header .header-rank { flex-basis: 15%; text-align: right; padding-right: 5px;}
+        #high-scores-header .header-name { flex-basis: 55%; text-align: right; padding-right: 10px;}
+        #high-scores-header .header-score { flex-basis: 30%; text-align: right; padding-right: 5px;} 
 
-
-        /* --- Page Containers --- */
-        main {
-            display: none; /* Hide pages by default */
-            width: 100%;
-        }
-        main.active {
-            display: block; /* Show active page */
-        }
-
-        .page-container { /* Generic container for padding */
-             padding: 20px;
-             max-width: 800px;
-             margin: 0 auto;
-        }
-
-        /* Game container visible by default again */
-        .game-container {
-            display: flex; /* Show by default */
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            padding: 20px 20px 150px 20px; /* Adjust padding */
-            position: relative;
-        }
-        /* Removed .game-container.visible */
-
-        .about-container {
-             padding: 40px 20px;
-             background-color: #fff;
-             border-radius: 16px;
-             box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-             min-height: calc(100vh - 150px); /* Example height */
-        }
-         .about-container h1, .high-scores-container h1 {
-             font-size: 2rem;
-             font-weight: bold;
-             color: #1e293b;
-             margin-bottom: 20px;
-             text-align: center;
-         }
-         .about-container p {
-             font-size: 1.1rem;
-             color: #475569;
-             line-height: 1.6;
-             text-align: center;
-         }
-
-        /* High Scores Styles */
-        .high-scores-container {
-            padding: 30px 20px;
-            background-color: #fff;
-            border-radius: 16px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-            min-height: calc(100vh - 150px);
-        }
-        #high-scores-list {
+        #high-scores-list-display { 
             list-style: none;
             padding: 0;
-            margin: 0;
-            max-width: 400px;
-            margin-left: auto;
-            margin-right: auto;
+            margin: 0 auto 30px auto; 
+            width: 100%;
+            max-width: 500px; 
         }
         .score-entry {
             display: flex;
@@ -175,508 +257,77 @@
             align-items: center;
             padding: 12px 15px;
             margin-bottom: 10px;
-            background-color: #f8fafc;
+            background-color: #f8fafc; 
             border-radius: 8px;
             font-size: 1.1rem;
-            border: 1px solid #e2e8f0;
-            gap: 10px;
+            border: 1px solid #e2e8f0; 
         }
         .score-entry .rank {
+            flex-basis: 15%; 
             font-weight: bold;
-            color: #64748b;
-            min-width: 30px;
-            text-align: left; /* Rank on the left in RTL */
+            color: #64748b; 
+            text-align: right; 
+            padding-right: 5px;
         }
         .score-entry .player-name {
-            flex-grow: 1;
-            color: #334155;
-            text-align: right; /* Name on the right in RTL */
+            flex-basis: 55%; 
+            color: #334155; 
+            text-align: right; 
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            padding-right: 10px;
         }
-        .score-entry .score-value {
+        .score-entry .score-value-container { 
+            flex-basis: 30%; 
+            display: flex;
+            justify-content: flex-end; 
+            align-items: baseline;
             font-weight: bold;
-            color: #0f172a;
-            min-width: 40px;
-            text-align: left; /* Score on the left */
-            white-space: nowrap; /* Prevent wrapping */
+            color: #0f172a; 
+            white-space: nowrap;
         }
-        /* Special styles for top 3 */
-        .score-entry.rank-1 {
-            background-color: #fef9c3; border-color: #facc15;
+        .score-entry .score-unit {
+            font-size: 0.9em; 
+            color: #475569; 
+            margin-right: 5px; 
         }
-        .score-entry.rank-1 .rank, .score-entry.rank-1 .score-value, .score-entry.rank-1 .player-name {
-            color: #ca8a04; font-size: 1.2rem;
-        }
-        .score-entry.rank-2 {
-            background-color: #f1f5f9; border-color: #94a3b8;
-        }
-        .score-entry.rank-2 .rank, .score-entry.rank-2 .score-value, .score-entry.rank-2 .player-name {
-            color: #475569; font-size: 1.15rem;
-        }
-        .score-entry.rank-3 {
-            background-color: #fff7ed; border-color: #fb923c;
-        }
-        .score-entry.rank-3 .rank, .score-entry.rank-3 .score-value, .score-entry.rank-3 .player-name {
-            color: #ea580c; font-size: 1.12rem;
-        }
-        #no-scores-message {
+
+        .score-entry.rank-1 { background-color: #fef9c3; border-color: #facc15; }
+        .score-entry.rank-1 .rank, .score-entry.rank-1 .player-name, .score-entry.rank-1 .score-value, .score-entry.rank-1 .score-unit { color: #ca8a04; font-size: 1.2rem; }
+        .score-entry.rank-2 { background-color: #f1f5f9; border-color: #94a3b8; }
+        .score-entry.rank-2 .rank, .score-entry.rank-2 .player-name, .score-entry.rank-2 .score-value, .score-entry.rank-2 .score-unit { color: #475569; font-size: 1.15rem; }
+        .score-entry.rank-3 { background-color: #fff7ed; border-color: #fb923c; }
+        .score-entry.rank-3 .rank, .score-entry.rank-3 .player-name, .score-entry.rank-3 .score-value, .score-entry.rank-3 .score-unit { color: #ea580c; font-size: 1.12rem; }
+        
+        #no-scores-display-message {
             text-align: center;
-            color: #64748b;
-            margin-top: 30px;
+            color: #64748b; 
+            margin-top: 40px;
+            font-size: 1.2rem;
             font-style: italic;
         }
-
-
-        /* Card styling */
-        .word-card {
-            width: 90%;
-            max-width: 700px;
-            height: 300px;
-            background-color: #ffffff;
-            border-radius: 16px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 20px;
-            overflow: hidden;
-            position: relative; /* Needed for absolute positioning inside */
-            border: 1px solid #e2e8f0;
-            padding: 10px;
-            transition: box-shadow 0.3s ease-out;
-        }
-
-        /* Correct Word Overlay */
-        .correct-word-overlay {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background-color: rgba(0, 0, 0, 0.75);
+        #back-to-game-button {
+            background-color: #10b981; 
             color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.9rem;
             font-weight: bold;
-            z-index: 10;
-            display: none;
-            direction: ltr;
-        }
-
-        /* Image display styling */
-        .image-display {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-            display: none;
-            animation-duration: 0.8s;
-            animation-fill-mode: both;
-        }
-
-        /* Text display styling */
-        .text-display {
-            font-size: 3rem;
-            font-weight: bold;
-            color: #334155;
-            text-align: center;
-            padding: 20px;
-            display: none;
-            animation-duration: 0.8s;
-            animation-fill-mode: both;
-            max-width: 100%;
-            word-wrap: break-word;
-        }
-        .text-display.fallback {
-             font-size: 1.5rem;
-             color: #94a3b8;
-             font-weight: normal;
-        }
-
-
-        /* Guess area styling - Container */
-        .guess-area {
-            width: 90%;
-            max-width: 700px;
-            min-height: 50px;
-            background-color: #e2e8f0;
+            padding: 12px 25px;
             border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 0.3em;
-            padding: 10px 15px;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
-            margin-bottom: 25px;
-            cursor: pointer;
-            direction: ltr;
-        }
-
-        /* Individual guess slot styling */
-        .guess-slot {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 1.5em;
-            height: 1.5em;
-            font-size: 24px;
-            font-family: monospace;
-            color: #1e293b;
-            background-color: #cbd5e1;
-            border-radius: 4px;
-            text-align: center;
-            line-height: 1.5em;
-            transition: background-color 0.2s ease, border 0.2s ease;
-            border: 2px solid transparent;
-        }
-
-        /* Highlight style for the active guessing slot (blinking) */
-        .guess-slot.active-guess {
-            border: 2px solid transparent;
-            background-color: #eff6ff;
-            animation: blinking-border 1s infinite;
-        }
-        /* Blinking border animation */
-        @keyframes blinking-border {
-            0%, 100% { border-color: #86efac; }
-            50% { border-color: transparent; }
-        }
-
-        /* Feedback colors */
-         .guess-slot.correct {
-            background-color: #86efac;
-            animation: none;
-            border-color: transparent;
-        }
-         .guess-slot.incorrect {
-             background-color: #fca5a5;
-             animation: none;
-             border-color: transparent;
-        }
-
-        /* Visually hidden input field to trigger keyboard */
-        .hidden-input {
-            position: absolute;
-            opacity: 0;
-            pointer-events: none;
-            width: 1px;
-            height: 1px;
-            left: -9999px;
-        }
-
-        /* --- On-Screen Keyboard --- */
-        #keyboard-area {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-            width: 100%;
-            max-width: 700px;
-            padding: 10px;
-            margin-top: 10px;
-            position: fixed;
-            bottom: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: rgba(240, 244, 248, 0.9);
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-            z-index: 50;
-            direction: ltr;
-        }
-         .keyboard-row {
-            display: flex;
-            justify-content: center;
-            gap: 6px;
-            width: 100%;
-        }
-        #keyboard-area.visible {
-             display: flex;
-        }
-        #keyboard-area button {
-            font-family: 'Inter', sans-serif;
-            font-weight: bold;
-            font-size: 1.1rem;
-            flex-grow: 1;
-            flex-basis: 0;
-            max-width: 45px;
-            height: 45px;
-            border: none;
-            border-radius: 6px;
-            background-color: #ffffff;
-            color: #334155;
-            cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transition: background-color 0.15s ease, transform 0.1s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 5px;
-        }
-        #keyboard-area button:active {
-            background-color: #e2e8f0;
-            transform: scale(0.95);
-        }
-        .key-highlight {
-            background-color: #f9a8d4 !important;
-            transition: background-color 0.3s ease;
-        }
-
-
-        /* --- RESPONSIVE STYLES for Mobile --- */
-        @media (max-width: 640px) {
-             #hamburger-button {
-                 display: block;
-             }
-             #main-nav {
-                 display: none;
-             }
-
-            .game-container {
-                 padding-top: 20px;
-            }
-            .word-card {
-                max-width: 330px;
-                height: 250px;
-            }
-             .correct-word-overlay {
-                 font-size: 0.8rem;
-                 padding: 3px 6px;
-             }
-            .guess-area {
-                max-width: 330px;
-                gap: 0.2em;
-            }
-             .guess-slot {
-                 font-size: 20px;
-            }
-            .text-display {
-                 font-size: 2.5rem;
-            }
-             .score-display {
-                font-size: 30px;
-                top: 10px;
-                right: 10px;
-                margin-top: 0;
-                margin-right: 0;
-            }
-             /* --- REMOVED: Sound button mobile styles --- */
-
-            .prompt {
-                font-size: 1rem;
-            }
-            /* Keyboard adjustments for mobile */
-             #keyboard-area {
-                 max-width: 100%;
-                 gap: 4px;
-                 padding: 10px 5px;
-                 bottom: 5px;
-            }
-             .keyboard-row {
-                 gap: 4px;
-             }
-             #keyboard-area button {
-                 height: 40px;
-                 font-size: 1rem;
-                 max-width: 40px;
-                 padding: 0 3px;
-            }
-            .about-container, .high-scores-container {
-                padding: 20px 15px;
-            }
-             .about-container h1, .high-scores-container h1 { font-size: 1.5rem; }
-             .about-container p { font-size: 1rem; }
-             .score-entry { font-size: 1rem; padding: 10px; }
-             .score-entry.rank-1 { font-size: 1.1rem; }
-             .score-entry.rank-2 { font-size: 1.05rem; }
-             .score-entry.rank-3 { font-size: 1.02rem; }
-             #milestone-notification {
-                 font-size: 1.2rem;
-                 padding: 10px 20px;
-             }
-             /* --- REMOVED: Start button mobile styles --- */
-        }
-
-
-        /* Score display styling */
-        .score-display {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            font-size: 40px;
-            font-weight: bold;
-            padding: 5px 10px;
-            border-radius: 8px;
-            background-color: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(5px);
-            z-index: 100;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
-        }
-        .score-display.visible {
-            opacity: 1;
-            visibility: visible;
-        }
-        .score-flash {
-            animation: flashScore 0.5s ease-in-out 3;
-        }
-
-        @keyframes flashScore {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.2; }
-        }
-
-
-        /* Prompt styling */
-        .prompt {
-            font-size: 1.2rem;
-            color: #475569;
-            margin-bottom: 15px;
-            font-weight: 500;
-            text-align: center;
-        }
-
-         /* Message overlay styling (Shared by Game Over and Checkpoint) */
-        .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
-            overflow: hidden;
-        }
-        .overlay.visible { opacity: 1; visibility: visible; }
-
-        .message-box { /* Base style for pop-up boxes */
-            background-color: white;
-            padding: 30px;
-            border-radius: 16px;
-            text-align: center;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            max-width: 90%;
-            position: relative;
-            z-index: 1001;
-        }
-         /* Specific styles for Game Over box */
-        #message-overlay .message-box h2 { font-size: 1.5rem; font-weight: bold; color: #1e293b; margin-bottom: 15px; }
-        #message-overlay .message-box p { font-size: 1rem; color: #475569; margin-bottom: 20px; }
-        #message-overlay .message-box button { /* Restart button */
-            background-color: #3b82f6;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            font-weight: bold;
-            cursor: pointer;
             transition: background-color 0.2s ease;
-        }
-        #message-overlay .message-box button:hover { background-color: #2563eb; }
-
-        /* Checkpoint Pop-up Styles */
-        #checkpoint-overlay .message-box p { /* Checkpoint message */
-            font-size: 1.1rem; /* Slightly larger text */
-            color: #334155;
-            margin-bottom: 25px;
-            font-weight: 500;
-        }
-        #checkpoint-overlay .button-group {
-            display: flex;
-            justify-content: center;
-            gap: 15px; /* Space between buttons */
-        }
-        #checkpoint-overlay .message-box button { /* General button style */
-            padding: 10px 25px;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: bold;
             cursor: pointer;
-            transition: background-color 0.2s ease, box-shadow 0.2s ease;
-            border: 1px solid transparent;
-        }
-        #checkpoint-continue-button {
-            background-color: #10b981; /* Green */
-            color: white;
-        }
-        #checkpoint-continue-button:hover {
-             background-color: #059669;
-             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        #checkpoint-finish-button {
-            background-color: #ef4444; /* Red */
-            color: white;
-        }
-         #checkpoint-finish-button:hover {
-             background-color: #dc2626;
-             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        /* High Score Name Prompt Styles */
-        #name-prompt-overlay .message-box p {
             font-size: 1.1rem;
-            color: #334155;
-            margin-bottom: 15px;
-            font-weight: 500;
+            margin-top: 20px; 
         }
-         #name-prompt-overlay .message-box input[type="text"] {
-             display: block;
-             width: 80%;
-             max-width: 250px;
-             margin: 0 auto 20px auto;
-             padding: 10px;
-             border: 1px solid #cbd5e1;
-             border-radius: 6px;
-             font-size: 1rem;
-             text-align: center;
-         }
-         #name-prompt-overlay .message-box button { /* Submit button */
-            background-color: #3b82f6;
-            color: white;
-            padding: 10px 25px;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-         }
-          #name-prompt-overlay .message-box button:hover {
-              background-color: #2563eb;
-          }
-
-
-        /* Spark Animation */
-        .spark {
-            position: absolute;
-            width: 4px;
-            height: 4px;
-            background-color: gold;
-            border-radius: 50%;
-            pointer-events: none;
-            animation: fly 1s ease-out forwards;
-            z-index: 1000;
+        #back-to-game-button:hover {
+            background-color: #059669; 
         }
 
-        @keyframes fly {
-            0% { opacity: 1; transform: translate(0, 0) scale(1); }
-            100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(0); }
-        }
 
-        /* Milestone Notification */
+        .spark { /* ... same ... */ }
+        @keyframes fly { /* ... same ... */ }
         #milestone-notification {
             position: fixed;
-            top: 20%;
+            top: 50px; 
             left: 50%;
             transform: translateX(-50%);
             background-color: rgba(0, 0, 0, 0.8);
@@ -690,34 +341,14 @@
             visibility: hidden;
             transition: opacity 0.5s ease, visibility 0.5s ease;
             pointer-events: none;
+            text-align: center; 
         }
-        #milestone-notification.visible {
-            opacity: 1;
-            visibility: visible;
+        #milestone-notification.visible { 
+            opacity: 1; 
+            visibility: visible; 
         }
 
-        /* --- REMOVED: Sound Toggle Button Styles --- */
-
-
-        /* --- Animations --- */
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideInDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        @keyframes slideInUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        @keyframes slideInLeft { from { transform: translateX(-50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        @keyframes slideInRight { from { transform: translateX(50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        @keyframes zoomIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        @keyframes bounceIn {
-            0%, 20%, 40%, 60%, 80%, 100% { animation-timing-function: cubic-bezier(0.215, 0.610, 0.355, 1.000); }
-            0% { opacity: 0; transform: scale3d(.3, .3, .3); } 20% { transform: scale3d(1.1, 1.1, 1.1); }
-            40% { transform: scale3d(.9, .9, .9); } 60% { opacity: 1; transform: scale3d(1.03, 1.03, 1.03); }
-            80% { transform: scale3d(.97, .97, .97); } 100% { opacity: 1; transform: scale3d(1, 1, 1); }
-        }
-        @keyframes rubberBand {
-            from { transform: scale3d(1, 1, 1); } 30% { transform: scale3d(1.25, 0.75, 1); }
-            40% { transform: scale3d(0.75, 1.25, 1); } 50% { transform: scale3d(1.15, 0.85, 1); }
-            65% { transform: scale3d(.95, 1.05, 1); } 75% { transform: scale3d(1.05, .95, 1); }
-            to { transform: scale3d(1, 1, 1); }
-        }
+        @keyframes fadeIn { /* ... same ... */ } /* ... other animations ... */
         .anim-fadeIn { animation-name: fadeIn; }
         .anim-slideInDown { animation-name: slideInDown; }
         .anim-slideInUp { animation-name: slideInUp; }
@@ -726,131 +357,143 @@
         .anim-zoomIn { animation-name: zoomIn; }
         .anim-bounceIn { animation-name: bounceIn; }
         .anim-rubberBand { animation-name: rubberBand; }
-
-        /* --- REMOVED: Start Button Styles --- */
-
     </style>
 </head>
 <body class="bg-gray-100">
-
-    <header id="main-header">
-         <nav id="main-nav">
-             <a href="#game" class="nav-link active" data-page="game-page">שחק במשחק</a>
-             <a href="#highscores" class="nav-link" data-page="high-scores-page">לוח השיאים</a>
-             <a href="#about" class="nav-link" data-page="about-page">אודות המשחק</a>
-         </nav>
-
-         <button id="hamburger-button" title="Menu">
-             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 4h18v2H3V4Zm0 7h18v2H3v-2Zm0 7h18v2H3v-2Z"/></svg>
-         </button>
-    </header>
-
-     <nav id="mobile-nav-menu">
-         <a href="#game" class="nav-link" data-page="game-page">שחק במשחק</a>
-         <a href="#highscores" class="nav-link" data-page="high-scores-page">לוח השיאים</a>
-         <a href="#about" class="nav-link" data-page="about-page">אודות המשחק</a>
+    <nav id="global-nav">
+        <a href="#" id="nav-link-game" class="nav-link active-nav">משחק</a>
+        <a href="#" id="nav-link-leaderboard" class="nav-link">לוח שיאים</a>
     </nav>
 
-    <main id="game-page" class="active"> <div class="game-container visible"> <div id="score" class="score-display">0</div>
+    <audio src="assets/mp3/1.mp3" loop id="background-music"></audio>
+    
+    <main id="letter-game-page" class="active"> 
+        <div class="game-container visible"> 
+            <div id="score" class="score-display">0</div>
             <div class="word-card">
                  <div id="correct-word-overlay" class="correct-word-overlay"></div>
                 <img id="image-display" class="image-display" src="" alt="Guess the word for this image" >
                 <div id="text-display" class="text-display"></div>
             </div>
-
-            <div id="prompt" class="prompt">Guess the FIRST letter</div>
-
-            <div id="guess-area" class="guess-area" >
-                </div>
-
-            <input type="text" id="hidden-input" class="hidden-input" maxlength="1" autocapitalize="off" autocomplete="off" spellcheck="false">
-
-            <div id="keyboard-area">
-                </div>
-        </div>
-    </main>
-
-    <main id="about-page">
-        <div class="about-container page-container">
-            <h1>על המשחק</h1>
-            <p>במשחק לא נכתבה שורת קוד אחת. הכל באמצעות AI Gemini Pro 2.5</p>
+            <div id="prompt" class="prompt">נחשו את האות הראשונה</div>
+            <div class="flex justify-center items-center mb-4"> <button id="hint-button">רמז תמורת חצי נקודה</button> 
+                <button id="manual-end-game-button">סיים משחק</button>
             </div>
-    </main>
-
-    <main id="high-scores-page">
-        <div class="high-scores-container page-container">
-            <h1>לוח השיאים</h1>
-            <ul id="high-scores-list">
-                </ul>
-             <p id="no-scores-message" style="display: none;">אין עדיין תוצאות</p>
+            <div id="guess-area" class="guess-area" ></div>
+            <input type="text" id="hidden-input" class="hidden-input" maxlength="1" autocapitalize="off" autocomplete="off" spellcheck="false">
+            <div id="keyboard-area"></div>
         </div>
     </main>
 
+    <main id="word-group-game-page"> 
+        <div class="mini-game-container">
+            <div id="score-mini-game" class="score-display">0</div> 
+            <h1 class="text-3xl font-bold text-slate-700 mb-6">משחקון זיהוי מילים!</h1>
+            <p id="mini-game-instruction" class="mb-4">הקשיבו למילה ולחצו על המספר הנכון.</p>
+            <button id="play-word-sound-button" class="mb-6">השמע מילה</button>
+            <div id="word-group-display"></div>
+            <div id="mini-game-feedback" class="mt-4"></div>
+            <button id="manual-end-mini-game-button" class="mt-6 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">סיים משחקון</button>
+        </div>
+    </main>
 
-     <div id="message-overlay" class="overlay"> <div id="spark-container" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></div>
+    <main id="leaderboard-page">
+        <div class="leaderboard-container">
+            <h1>לוח השיאים</h1>
+            <div id="high-scores-header"> <span class="header-rank">מיקום</span>
+                <span class="header-name">שם</span>
+                <span class="header-score">ניקוד</span>
+            </div>
+            <ul id="high-scores-list-display"></ul>
+            <p id="no-scores-display-message" style="display:none;">עדיין אין שיאים רשומים.</p>
+            <button id="back-to-game-button">חזרה למשחק</button>
+        </div>
+    </main>
+
+    <div id="message-overlay" class="overlay"> 
+        <div id="spark-container" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></div>
         <div class="message-box">
             <h2 id="message-title">Game Over!</h2>
             <p id="message-text">Your final score is...</p>
-            <button id="restart-button">Play Again</button>
+            <div class="button-group"> 
+                <button id="restart-button">Play Again</button>
+                <button id="leaderboard-button">לוח שיאים</button>
+            </div>
         </div>
     </div>
-
     <div id="checkpoint-overlay" class="overlay">
         <div class="message-box">
-            <p id="checkpoint-message">כל הכבוד! סיימתם 10 מילים חדשות, האם תרצו להמשיך ולצבור עוד נקודות?</p>
+            <p id="checkpoint-message">כל הכבוד! צברת מספיק נקודות. האם תרצו להמשיך למשחקון בונוס?</p>
             <div class="button-group">
-                 <button id="checkpoint-continue-button">המשך</button> <button id="checkpoint-finish-button">סיים</button> </div>
+                 <button id="checkpoint-continue-button">כן, למשחקון!</button> 
+                 <button id="checkpoint-finish-button">לא, סיים משחק</button> 
+            </div>
         </div>
     </div>
-
      <div id="name-prompt-overlay" class="overlay">
          <div class="message-box">
              <p>ברכות! הגעתם לשיא חדש ונכנסתם ללוח התוצאות! נא רשמו את שמכם:</p>
              <input type="text" id="player-name-input" maxlength="15" placeholder="Your Name">
-             <button id="submit-name-button">שמור</button> </div>
+             <button id="submit-name-button">שמור</button> 
+         </div>
      </div>
-
     <div id="milestone-notification">10 Points!!!</div>
+
+    <div id="correct-word-prompt-overlay" class="overlay">
+        <div class="message-box">
+            <p>המילה הנכונה היא <span id="revealed-word-span"></span>. נא שננו אותה ולחצו על כל מקש כשאתם מוכנים לתרגיל הבא.</p>
+        </div>
+    </div>
+
 
     <script>
         // --- DOM Elements ---
+        const navLinkGame = document.getElementById('nav-link-game'); 
+        const navLinkLeaderboard = document.getElementById('nav-link-leaderboard'); 
+
+        const letterGamePage = document.getElementById('letter-game-page');
+        const wordGroupGamePage = document.getElementById('word-group-game-page');
+        const leaderboardPage = document.getElementById('leaderboard-page'); 
         const imageDisplay = document.getElementById('image-display');
         const textDisplay = document.getElementById('text-display');
-        const wordCard = document.querySelector('.word-card');
+        const wordCard = document.querySelector('#letter-game-page .word-card');
         const guessArea = document.getElementById('guess-area');
         const hiddenInput = document.getElementById('hidden-input');
         const keyboardArea = document.getElementById('keyboard-area');
-        const scoreDisplay = document.getElementById('score');
+        const scoreDisplayLetterGame = document.querySelector('#letter-game-page #score');
         const promptDisplay = document.getElementById('prompt');
+        const hintButton = document.getElementById('hint-button'); 
+        const manualEndGameButton = document.getElementById('manual-end-game-button'); 
+        const correctWordOverlay = document.getElementById('correct-word-overlay');
+        const correctWordPromptOverlayElement = document.getElementById('correct-word-prompt-overlay'); 
+        const revealedWordSpan = document.getElementById('revealed-word-span'); // Span for the revealed word
+
+        const scoreDisplayMiniGame = document.querySelector('#word-group-game-page #score-mini-game');
+        const miniGameInstruction = document.getElementById('mini-game-instruction');
+        const playWordSoundButton = document.getElementById('play-word-sound-button');
+        const wordGroupDisplay = document.getElementById('word-group-display');
+        const miniGameFeedback = document.getElementById('mini-game-feedback');
+        const manualEndMiniGameButton = document.getElementById('manual-end-mini-game-button'); 
+        const highScoresListDisplay = document.getElementById('high-scores-list-display'); 
+        const noScoresDisplayMessage = document.getElementById('no-scores-display-message'); 
+        const backToGameButton = document.getElementById('back-to-game-button'); 
+        const bgMusicElement = document.getElementById('background-music'); 
         const messageOverlay = document.getElementById('message-overlay');
         const sparkContainer = document.getElementById('spark-container');
         const messageTitle = document.getElementById('message-title');
         const messageText = document.getElementById('message-text');
         const restartButton = document.getElementById('restart-button');
-        const milestoneNotification = document.getElementById('milestone-notification');
-        // const bgMusicElement = document.getElementById('bg-music'); // Removed
-        // const soundToggleButton = document.getElementById('sound-toggle-button'); // Removed
-        const hamburgerButton = document.getElementById('hamburger-button');
-        const mobileNavMenu = document.getElementById('mobile-nav-menu');
-        const mainNavLinks = document.querySelectorAll('#main-nav .nav-link');
-        const mobileNavLinks = document.querySelectorAll('#mobile-nav-menu .nav-link');
-        const pages = document.querySelectorAll('main');
+        const leaderboardButton = document.getElementById('leaderboard-button'); 
         const checkpointOverlay = document.getElementById('checkpoint-overlay');
         const checkpointContinueButton = document.getElementById('checkpoint-continue-button');
         const checkpointFinishButton = document.getElementById('checkpoint-finish-button');
-        const highScoresList = document.getElementById('high-scores-list');
-        const noScoresMessage = document.getElementById('no-scores-message');
         const namePromptOverlay = document.getElementById('name-prompt-overlay');
         const playerNameInput = document.getElementById('player-name-input');
         const submitNameButton = document.getElementById('submit-name-button');
-        const correctWordOverlay = document.getElementById('correct-word-overlay');
-        // const startGameButton = document.getElementById('start-game-button'); // Removed
-        // const startContainer = document.getElementById('start-container'); // Removed
-        const gamePageContainer = document.getElementById('game-page');
+        const milestoneNotification = document.getElementById('milestone-notification');
 
-
-        // --- Game Configuration ---
-        const wordData = [
+        // --- Letter Game Configuration ---
+        const letterGameWordData = [ /* ... Same word data ... */ 
              { word: 'elephant', imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/African_Bush_Elephant.jpg/1280px-African_Bush_Elephant.jpg' },
             { word: 'egg', imageUrl: 'https://thumbs.dreamstime.com/b/cheerful-animated-egg-character-arms-legs-cheerful-animated-egg-character-features-friendly-face-arms-349677850.jpg?w=768' },
             { word: 'eraser', imageUrl: 'https://thumbs.dreamstime.com/b/transparent-glowing-eraser-animated-erasing-action-sleek-transparent-glowing-eraser-animated-erasing-effect-368891160.jpg?w=768' },
@@ -920,109 +563,58 @@
             { word: 'chicken', imageUrl: 'https://thumbs.dreamstime.com/b/roast-turkey-chicken-dinner-plate-traditional-thanksgiving-vector-clip-art-illustration-simple-cartoon-style-isolated-133279135.jpg?w=768' },
             { word: 'car', imageUrl: 'https://thumbs.dreamstime.com/b/american-pony-car-detail-vector-image-black-modern-white-racing-stripes-isolated-white-background-file-contains-31147806.jpg?w=992' },
             { word: 'plan', displayText: 'תכנית' },
-            { word: 'sandwich', imageUrl: 'https://thumbs.dreamstime.com/b/appetizing-sandwich-cheese-vegetables-18855790.jpg?w=768' }, // Placeholder
+            { word: 'sandwich', imageUrl: 'https://thumbs.dreamstime.com/b/appetizing-sandwich-cheese-vegetables-18855790.jpg?w=768' },
         ];
         const animations = ['anim-fadeIn', 'anim-slideInDown', 'anim-slideInUp', 'anim-slideInLeft', 'anim-slideInRight', 'anim-zoomIn', 'anim-bounceIn', 'anim-rubberBand'];
-        const totalWords = wordData.length; // Automatically calculated
-        const checkpointInterval = 10; // Ask every 10 words
+        const totalLetterGameWords = letterGameWordData.length;
+        const checkpointScoreInterval = 10; 
         const HIGH_SCORES_KEY = 'wordGuessHighScores';
-        const MAX_HIGH_SCORES = 10; // Max number of scores to keep
+        const MAX_HIGH_SCORES = 10;
 
-        // --- Game State ---
-        let currentWordIndex = 0;
-        let score = 0;
-        let currentWord = '';
-        let displayedGuess = []; // Array to hold underscores and correct letters
-        let guessingStage = 'first'; // 'first' or 'last'
-        let firstLetterCorrect = false;
-        let lastLetterCorrect = false;
-        let listeningForInput = true; // Control when to process input
-        let isTouchDevice = false; // Flag for touch device detection
-        let toneStarted = false; // Flag to ensure Tone.js starts only once
-        let scoreFlashTimeout = null; // Timeout ID for score flash
-        // let musicPlaying = false; // Removed
-        let isMuted = false;
+        // --- Mini-Game Configuration ---
+        const wordGroupMiniGameData = [
+            { words: ["dad", "had", "sad", "sat"] }, { words: ["best", "test", "pest", "past"] },
+            { words: ["it", "sit", "hit", "hat"] }, { words: ["has", "hen", "eggs", "the"] },
+            { words: ["and", "hand", "sand", "stand"] }, { words: ["him", "hit", "his", "has"] },
+            { words: ["map", "man", "mat", "met"] }, { words: ["he", "has", "eggs", "pens"] },
+            { words: ["met", "net", "bet", "best"] }, { words: ["cab", "can", "cat", "cast"] },
+            { words: ["is", "in", "it", "its"] }
+        ];
+        let shuffledMiniGameGroups = [];
+        let currentMiniGameGroupIndex = 0;
+        let currentMiniGameTargetWord = '';
+        let miniGameRoundActive = false;
+        let originalBgVolume = 1.0; 
+
+        // --- Shared Game State ---
+        let score = 0; 
+        let backgroundMusicAttempted = false; 
+        let isTouchDevice = false;
         let finalScoreToSave = 0;
+        let lastCheckpointScore = 0; 
+        let waitingForKeyPressAfterReveal = false; 
 
-        // --- Tone.js Setup (Sound Effects Only) ---
-        let synth;
-        let correctSoundSynth;
-        let incorrectSoundSynth;
+        // --- Letter Game State ---
+        let currentLetterGameWordIndex = 0;
+        let letterGame_currentWord = ''; 
+        let letterGame_displayedGuess = [];
+        let letterGame_guessingStage = 'first';
+        let letterGame_firstLetterCorrect = false;
+        let letterGame_lastLetterCorrect = false;
+        let letterGame_listeningForInput = true;
+        let letterGame_hintUsedForCurrentWord = false;
+        let letterGame_scoreFlashTimeout = null;
 
-        // --- Functions ---
+        const synth = window.speechSynthesis;
+        let speechUtterance;
 
-        /**
-         * Initializes Tone.js synthesizers after context is ready.
-         */
-        function initializeSynths() {
-             if (typeof Tone === 'undefined') {
-                 console.error("Tone.js not loaded, cannot initialize synths.");
-                 return;
-             }
-            if (!synth) {
-                 synth = new Tone.PolySynth(Tone.Synth, {
-                     oscillator: { type: "sine" },
-                     envelope: { attack: 0.01, decay: 0.1, sustain: 0.3, release: 0.5 }
-                 }).toDestination();
+        function shuffleArray(array) { 
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
             }
-             if (!correctSoundSynth) {
-                 correctSoundSynth = new Tone.Synth({
-                     oscillator: { type: "triangle" },
-                     volume: -5,
-                     envelope: { attack: 0.01, decay: 0.1, sustain: 0.1, release: 0.2 }
-                 }).toDestination();
-             }
-              if (!incorrectSoundSynth) {
-                  incorrectSoundSynth = new Tone.Synth({
-                      oscillator: { type: "square" },
-                      volume: -10,
-                      envelope: { attack: 0.01, decay: 0.2, sustain: 0, release: 0.1 }
-                  }).toDestination();
-              }
-             console.log("Tone.js Synths Initialized");
-             Tone.Destination.mute = isMuted; // Apply mute state after init
         }
-
-        /**
-         * Attempts to start the Tone.js audio context.
-         * --- MODIFIED: Returns true/false ---
-         */
-        async function startAudioContextIfNeeded() {
-             if (typeof Tone === 'undefined') {
-                 console.error("Tone.js not loaded, cannot start audio context.");
-                 return false; // Indicate failure
-             }
-            if (!toneStarted && Tone.context.state !== 'running') {
-                console.log("Attempting to start audio context..."); // DEBUG
-                try {
-                    await Tone.start();
-                    toneStarted = true;
-                    initializeSynths(); // Initialize synths after context starts
-                    console.log("Audio context started successfully."); // DEBUG
-                    return true; // Indicate success
-                } catch (e) {
-                    console.error("Failed to start Tone.js audio context:", e);
-                    return false; // Indicate failure
-                }
-            } else if (toneStarted && !synth) { // If context started but synths not ready
-                 initializeSynths();
-            }
-            return toneStarted; // Return current status
-        }
-
-        /**
-         * --- REMOVED: playBackgroundMusic function ---
-         */
-
-        /**
-         * --- REMOVED: stopBackgroundMusic function ---
-         */
-
-
-        /**
-         * Detects if it's likely a touch device.
-         */
-        function detectTouch() {
+        function detectTouch() { 
              isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0);
              if (isTouchDevice) {
                  document.body.classList.add('touch-device');
@@ -1032,751 +624,757 @@
                  document.body.classList.remove('touch-device');
              }
         }
-
-        /**
-         * Shuffles array in place using Fisher-Yates (Knuth) algorithm.
-         * @param {Array} array Array to shuffle.
-         */
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
+        function tryStartBackgroundMusic() { 
+            if (bgMusicElement && !backgroundMusicAttempted && bgMusicElement.paused) {
+                bgMusicElement.volume = 0.5; 
+                originalBgVolume = bgMusicElement.volume; 
+                console.log("Attempting to play background music due to user interaction...");
+                bgMusicElement.play()
+                    .then(() => {
+                        console.log("Background music playback started.");
+                        backgroundMusicAttempted = true; 
+                    })
+                    .catch(error => {
+                        console.error("Error attempting to play background music:", error);
+                        backgroundMusicAttempted = true; 
+                    });
+            } else if (bgMusicElement && bgMusicElement.paused === false) {
+                backgroundMusicAttempted = true; 
             }
         }
+        
+        function showPage(pageId) {
+            document.querySelectorAll('main').forEach(page => page.classList.remove('active'));
+            document.querySelectorAll('#global-nav .nav-link').forEach(link => link.classList.remove('active-nav'));
 
-        /**
-         * Creates the on-screen keyboard buttons.
-         */
-        function createKeyboard() {
-            keyboardArea.innerHTML = ''; // Clear previous keyboard if any
-            const rows = [
-                "qwertyuiop",
-                "asdfghjkl",
-                "zxcvbnm"
-            ];
+            const targetPage = document.getElementById(pageId);
+            if (targetPage) targetPage.classList.add('active');
 
+            if (pageId === 'leaderboard-page') {
+                if(navLinkLeaderboard) navLinkLeaderboard.classList.add('active-nav');
+                displayHighScores(); 
+            } else if (pageId === 'letter-game-page' || pageId === 'word-group-game-page') {
+                 if(navLinkGame) navLinkGame.classList.add('active-nav');
+            }
+            updateScoreDisplays(); 
+            updateManualEndGameButtonVisibility(); 
+        }
+
+        function updateScoreDisplays() {
+            const scoreToDisplay = score % 1 === 0 ? score : score.toFixed(1); 
+            if(scoreDisplayLetterGame) scoreDisplayLetterGame.textContent = `${scoreToDisplay}`;
+            if(scoreDisplayMiniGame) scoreDisplayMiniGame.textContent = `${scoreToDisplay}`;
+            
+            const maxScorePossibleOverall = (totalLetterGameWords * 2) + wordGroupMiniGameData.length;
+            const percentage = maxScorePossibleOverall > 0 ? (score / maxScorePossibleOverall) * 100 : 0;
+            const hue = Math.min(120, percentage * 1.2); 
+            if(scoreDisplayLetterGame) scoreDisplayLetterGame.style.color = `hsl(${hue}, 100%, 40%)`;
+            if(scoreDisplayMiniGame) scoreDisplayMiniGame.style.color = `hsl(${hue}, 100%, 40%)`;
+        }
+
+
+        // --- LETTER GUESSING GAME ---
+        function initializeLetterGame(continueFromPrevious = false) {
+            console.log("Initializing Letter Game state. Continue from previous:", continueFromPrevious);
+            if (!continueFromPrevious) {
+                currentLetterGameWordIndex = 0; 
+            }
+            letterGame_hintUsedForCurrentWord = false; 
+            detectTouch(); 
+            if (!continueFromPrevious) shuffleArray(letterGameWordData); 
+            
+            letterGame_guessingStage = 'first';
+            letterGame_firstLetterCorrect = false; letterGame_lastLetterCorrect = false; 
+            messageOverlay.classList.remove('visible');
+            checkpointOverlay.classList.remove('visible'); 
+            namePromptOverlay.classList.remove('visible'); 
+            correctWordPromptOverlayElement.classList.remove('visible'); 
+            sparkContainer.innerHTML = ''; 
+            scoreDisplayLetterGame.classList.remove('visible', 'score-flash');
+            if (letterGame_scoreFlashTimeout) clearTimeout(letterGame_scoreFlashTimeout);
+            updateScoreDisplays(); 
+            if (isTouchDevice) createLetterGameKeyboard();
+            else { keyboardArea.innerHTML = ''; keyboardArea.classList.remove('visible'); }
+            
+            letterGame_listeningForInput = true; 
+            waitingForKeyPressAfterReveal = false; 
+            loadLetterGameWord(); 
+            
+            hiddenInput.removeEventListener('input', handleLetterGameTextInput);
+            hiddenInput.addEventListener('input', handleLetterGameTextInput);
+            const focusTrigger = isTouchDevice ? 'touchstart' : 'click';
+            guessArea.removeEventListener(focusTrigger, focusLetterGameHiddenInput);
+            guessArea.addEventListener(focusTrigger, focusLetterGameHiddenInput);
+            promptDisplay.removeEventListener(focusTrigger, focusLetterGameHiddenInput);
+            promptDisplay.addEventListener(focusTrigger, focusLetterGameHiddenInput);
+            console.log("Letter Game initialization complete.");
+            showPage('letter-game-page');
+        }
+
+        function createLetterGameKeyboard() { 
+            keyboardArea.innerHTML = ''; 
+            const rows = [ "qwertyuiop", "asdfghjkl", "zxcvbnm" ];
             rows.forEach(rowString => {
                 const rowDiv = document.createElement('div');
                 rowDiv.classList.add('keyboard-row');
                 rowString.split('').forEach(letter => {
                     const button = document.createElement('button');
                     button.textContent = letter.toUpperCase();
-                    button.dataset.key = letter; // Add data attribute for easy selection
-                    button.addEventListener('click', () => handleOnScreenKeyPress(letter));
+                    button.dataset.key = letter; 
+                    button.addEventListener('click', () => handleLetterGameOnScreenKeyPress(letter));
                     rowDiv.appendChild(button);
                 });
                 keyboardArea.appendChild(rowDiv);
             });
-            keyboardArea.classList.add('visible'); // Make keyboard visible
-
-            animateKeyboardIntro();
+            keyboardArea.classList.add('visible'); 
+            animateLetterGameKeyboardIntro();
         }
-
-        /**
-         * Animates the keyboard intro.
-         */
-        function animateKeyboardIntro() {
+        function animateLetterGameKeyboardIntro() { 
             const sequence = ['m', 'i', 'l', 'e', 'y'];
-            const highlightDuration = 300; // ms per letter highlight
-            const finalDelay = 2000; // ms after last letter before clearing
-
+            const highlightDuration = 300; 
+            const finalDelay = 2000; 
             sequence.forEach((letter, index) => {
                 setTimeout(() => {
                     const keyButton = keyboardArea.querySelector(`button[data-key="${letter}"]`);
-                    if (keyButton) {
-                        keyButton.classList.add('key-highlight');
-                    }
+                    if (keyButton) keyButton.classList.add('key-highlight');
                 }, index * highlightDuration);
             });
-
             setTimeout(() => {
                 const highlightedKeys = keyboardArea.querySelectorAll('.key-highlight');
                 highlightedKeys.forEach(key => key.classList.remove('key-highlight'));
             }, sequence.length * highlightDuration + finalDelay);
         }
 
-
-        /**
-         * Initializes the game state and UI elements. Does not start audio.
-         */
-        function initializeGame() {
-            console.log("Initializing game state..."); // DEBUG
-            // stopBackgroundMusic(); // Removed
-
-            detectTouch(); // Detect touch capability
-            console.log("Is touch device:", isTouchDevice); // DEBUG
-            shuffleArray(wordData); // Shuffle the word list
-
-            // Reset game state
-            currentWordIndex = 0;
-            score = 0;
-            guessingStage = 'first';
-            firstLetterCorrect = false;
-            lastLetterCorrect = false;
-            listeningForInput = true;
-            messageOverlay.classList.remove('visible');
-            checkpointOverlay.classList.remove('visible'); // Ensure checkpoint is hidden
-            namePromptOverlay.classList.remove('visible'); // Ensure name prompt is hidden
-            sparkContainer.innerHTML = ''; // Clear any old sparks
-            scoreDisplay.classList.remove('visible', 'score-flash');
-            if (scoreFlashTimeout) clearTimeout(scoreFlashTimeout);
-            updateScoreDisplay();
-
-            // soundToggleButton.classList.toggle('muted', isMuted); // Removed
-            // bgMusicElement.muted = isMuted; // Removed
-
-            if (isTouchDevice) {
-                console.log("Creating on-screen keyboard"); // DEBUG
-                createKeyboard();
-            } else {
-                 console.log("Hiding on-screen keyboard"); // DEBUG
-                 keyboardArea.innerHTML = '';
-                 keyboardArea.classList.remove('visible');
-            }
-
-            loadWord(); // Load the first word
-
-            // Add event listeners (listeners for buttons outside game page are added onload)
-            hiddenInput.removeEventListener('input', handleTextInput);
-            hiddenInput.addEventListener('input', handleTextInput);
-
-            const focusTrigger = isTouchDevice ? 'touchstart' : 'click';
-            guessArea.removeEventListener(focusTrigger, focusHiddenInput);
-            guessArea.addEventListener(focusTrigger, focusHiddenInput);
-            promptDisplay.removeEventListener(focusTrigger, focusHiddenInput);
-            promptDisplay.addEventListener(focusTrigger, focusHiddenInput);
-
-            console.log("Game initialization complete."); // DEBUG
+        function updateLetterGameHintButtonState() { 
+            if (!hintButton) return;
+            const canShowHint = letterGame_currentWord.length > 2 && !letterGame_hintUsedForCurrentWord && letterGame_guessingStage !== 'done' && letterGame_listeningForInput;
+            hintButton.disabled = !canShowHint;
+            hintButton.style.display = letterGame_listeningForInput && letterGame_guessingStage !== 'done' ? 'inline-block' : 'none';
         }
-
-        /**
-         * --- REMOVED: toggleMute function ---
-         */
-
-
-        /**
-         * Focuses the hidden input field.
-         * --- MODIFIED: Does NOT attempt to start audio here ---
-         */
-        function focusHiddenInput() {
-            if (listeningForInput && guessingStage !== 'done' && !isTouchDevice) {
-                 console.log("Focusing hidden input (non-touch)"); // DEBUG
+        
+        function focusLetterGameHiddenInput() { 
+            if (waitingForKeyPressAfterReveal) return; 
+            tryStartBackgroundMusic(); 
+            if (letterGame_listeningForInput && letterGame_guessingStage !== 'done' && !isTouchDevice) {
                 hiddenInput.focus();
-            } else if (isTouchDevice) {
-                 console.log("Touch device detected, not focusing hidden input on tap."); // DEBUG
-                 if (document.activeElement === hiddenInput) {
-                    hiddenInput.blur();
-                 }
+            } else if (isTouchDevice && document.activeElement === hiddenInput) {
+                hiddenInput.blur();
             }
         }
 
-        /**
-         * Updates the content of the guess area using spans and highlights the active slot.
-         */
-        function updateGuessArea() {
-            guessArea.innerHTML = ''; // Clear previous slots
-            displayedGuess.forEach((letter, index) => {
+        function updateLetterGameGuessArea() {
+            guessArea.innerHTML = '';
+            letterGame_displayedGuess.forEach((letter, index) => {
                 const slot = document.createElement('span');
                 slot.classList.add('guess-slot');
-                slot.textContent = letter; // Either '_' or the correct letter
+                slot.textContent = letter; 
 
-                // Apply active class for blinking border
-                if (listeningForInput && guessingStage !== 'done') {
-                     if (guessingStage === 'first' && index === 0) {
-                        slot.classList.add('active-guess');
-                    } else if (guessingStage === 'last' && index === currentWord.length - 1) {
-                        slot.classList.add('active-guess');
+                slot.classList.remove('correct', 'incorrect', 'active-guess'); 
+
+                if (index === 0) { 
+                    if (letterGame_guessingStage === 'last' || letterGame_guessingStage === 'done') { 
+                        if (letterGame_firstLetterCorrect) {
+                            slot.classList.add('correct');
+                        } else {
+                            slot.classList.add('incorrect'); 
+                        }
+                    }
+                } else if (index === letterGame_currentWord.length - 1) { 
+                    if (letterGame_guessingStage === 'done') { 
+                        if (letterGame_lastLetterCorrect) {
+                            slot.classList.add('correct');
+                        } else {
+                            slot.classList.add('incorrect'); 
+                        }
                     }
                 }
 
+                if (letterGame_listeningForInput && letterGame_guessingStage !== 'done') {
+                    if (letterGame_guessingStage === 'first' && index === 0) {
+                        slot.classList.remove('correct', 'incorrect'); 
+                        slot.classList.add('active-guess');
+                    } else if (letterGame_guessingStage === 'last' && index === (letterGame_currentWord.length - 1)) {
+                        if (letterGame_displayedGuess[index] === '_') { 
+                           slot.classList.remove('correct', 'incorrect'); 
+                           slot.classList.add('active-guess');
+                        }
+                    }
+                }
                 guessArea.appendChild(slot);
             });
-             // console.log("Guess area updated:", displayedGuess.join('')); // DEBUG
         }
 
-
-        /**
-         * Loads the current word/image/text, displays it with animation, and sets up the guess area.
-         */
-        function loadWord() {
-            // console.log(`Loading word index: ${currentWordIndex}`); // DEBUG
-            if (currentWordIndex >= totalWords) {
-                console.log("All words completed, ending game."); // DEBUG
-                endGame();
-                return;
+        function loadLetterGameWord() {
+            if (currentLetterGameWordIndex >= totalLetterGameWords) { 
+                handleOverallGameEnd("כל הכבוד! סיימת את כל המילים במשחק הניחוש!"); 
+                return; 
             }
-
-            const currentData = wordData[currentWordIndex];
-            if (!currentData || !currentData.word) {
-                console.error(`Invalid data at index ${currentWordIndex}:`, currentData);
-                currentWordIndex++;
-                loadWord();
-                return;
-            }
-
-            const wordForThisCard = currentData.word.toLowerCase();
-            currentWord = wordForThisCard;
-            // console.log(`Current word: ${currentWord}`); // DEBUG
-
-            firstLetterCorrect = false;
-            lastLetterCorrect = false;
-            guessingStage = 'first';
-            promptDisplay.textContent = `Guess the FIRST letter`; // Text Updated
-             correctWordOverlay.style.display = 'none';
-             correctWordOverlay.textContent = '';
+            const currentData = letterGameWordData[currentLetterGameWordIndex];
+            if (!currentData || !currentData.word) { currentLetterGameWordIndex++; loadLetterGameWord(); return; }
+            
+            letterGame_currentWord = currentData.word.toLowerCase();
+            letterGame_firstLetterCorrect = false; letterGame_lastLetterCorrect = false; 
+            letterGame_guessingStage = 'first';
+            letterGame_hintUsedForCurrentWord = false; 
+            letterGame_listeningForInput = true; 
+            waitingForKeyPressAfterReveal = false;
 
 
-            displayedGuess = Array(currentWord.length).fill('_');
-            updateGuessArea();
-
+            promptDisplay.textContent = `נחשו את האות הראשונה`;
+            correctWordOverlay.style.display = 'none'; correctWordOverlay.textContent = '';
+            letterGame_displayedGuess = Array(letterGame_currentWord.length).fill('_');
+            updateLetterGameGuessArea();
+            
             const randomAnimation = animations[Math.floor(Math.random() * animations.length)];
-            imageDisplay.className = 'image-display';
-            textDisplay.className = 'text-display';
-            imageDisplay.style.display = 'none';
-            textDisplay.style.display = 'none';
+            imageDisplay.className = 'image-display'; textDisplay.className = 'text-display';
+            imageDisplay.style.display = 'none'; textDisplay.style.display = 'none';
             imageDisplay.onerror = null;
-
             if (currentData.displayText) {
-                textDisplay.textContent = currentData.displayText;
-                textDisplay.style.display = 'block';
+                textDisplay.textContent = currentData.displayText; textDisplay.style.display = 'block';
                 setTimeout(() => textDisplay.classList.add(randomAnimation), 10);
             } else if (currentData.imageUrl) {
-                imageDisplay.onerror = function() {
-                    console.error(`Image failed to load for word: ${wordForThisCard}`); // DEBUG
-                    handleImageError(this, wordForThisCard);
-                };
-                imageDisplay.src = currentData.imageUrl;
-                imageDisplay.style.display = 'block';
+                imageDisplay.onerror = function() { handleLetterGameImageError(this, letterGame_currentWord); };
+                imageDisplay.src = currentData.imageUrl; imageDisplay.style.display = 'block';
                 setTimeout(() => imageDisplay.classList.add(randomAnimation), 10);
             } else {
-                 textDisplay.textContent = `No content for "${currentWord}"`;
-                 textDisplay.classList.add('fallback');
-                 textDisplay.style.display = 'block';
-                 setTimeout(() => textDisplay.classList.add(randomAnimation), 10);
+                 textDisplay.textContent = `No content for "${letterGame_currentWord}"`; textDisplay.classList.add('fallback');
+                 textDisplay.style.display = 'block'; setTimeout(() => textDisplay.classList.add(randomAnimation), 10);
             }
-
-            wordCard.style.boxShadow = '0 10px 20px rgba(0, 0, 0, 0.1)';
-
-            updateScoreDisplay();
-            listeningForInput = true;
-            // console.log("Word loaded successfully."); // DEBUG
-
-             if (!isTouchDevice) {
-                 setTimeout(focusHiddenInput, 100);
-             }
+            if(wordCard) wordCard.style.boxShadow = '0 10px 20px rgba(0, 0, 0, 0.1)';
+            updateScoreDisplays(); 
+            updateLetterGameHintButtonState(); 
+            updateManualEndGameButtonVisibility();
+            
+            if (!isTouchDevice) setTimeout(focusLetterGameHiddenInput, 100);
         }
 
-        /**
-         * Handles image loading errors.
-         * @param {HTMLImageElement} imgElement - The image element that failed.
-         * @param {string} word - The word associated with this image load attempt.
-         */
-        function handleImageError(imgElement, word) {
-             // console.log(`Handling image error for word: ${word}`); // DEBUG
-            imgElement.style.display = 'none';
-            imgElement.className = 'image-display';
-
+        function handleLetterGameImageError(imgElement, word) { 
+            imgElement.style.display = 'none'; imgElement.className = 'image-display';
             textDisplay.textContent = `Image for "${word}" not found`;
-            textDisplay.className = 'text-display fallback';
-            textDisplay.style.display = 'block';
-
+            textDisplay.className = 'text-display fallback'; textDisplay.style.display = 'block';
             const randomAnimation = animations[Math.floor(Math.random() * animations.length)];
-             setTimeout(() => {
-                 if (textDisplay) {
-                     textDisplay.classList.add(randomAnimation);
-                 }
-             }, 10);
+            setTimeout(() => { if (textDisplay) textDisplay.classList.add(randomAnimation); }, 10);
         }
-
-
-        /**
-         * Updates the score display text and color.
-         */
-        function updateScoreDisplay() {
-            scoreDisplay.textContent = `${score}`;
-            const maxScore = totalWords * 2;
-            const percentage = maxScore > 0 ? (score / maxScore) : 0;
-            const hue = percentage * 120;
-            scoreDisplay.style.color = `hsl(${hue}, 100%, 40%)`;
-        }
-
-        /**
-         * Flashes the score display.
-         */
-        function flashScore() {
-            if (scoreFlashTimeout) clearTimeout(scoreFlashTimeout);
-            scoreDisplay.classList.remove('score-flash');
-            void scoreDisplay.offsetWidth;
-            scoreDisplay.classList.add('visible', 'score-flash');
-            scoreFlashTimeout = setTimeout(() => {
-                 scoreDisplay.classList.remove('visible', 'score-flash');
-            }, 1500);
-        }
-
-
-         /**
-         * Provides visual feedback on a specific guess slot.
-         * @param {number} index - The index of the slot.
-         * @param {boolean} correct - Whether the guess was correct.
-         */
-        function provideSlotFeedback(index, correct) {
-            const slots = guessArea.querySelectorAll('.guess-slot');
-            if (slots && slots[index]) {
-                slots[index].classList.remove('active-guess'); // Always remove active style
-                slots[index].classList.add(correct ? 'correct' : 'incorrect');
-                setTimeout(() => {
-                    if (slots[index]) {
-                        slots[index].classList.remove('correct', 'incorrect');
-                    }
-                }, 300);
-                 // --- REMOVED: Sound Effect Playing Logic ---
-            } else {
-                console.warn(`Could not find slot at index ${index} to provide feedback.`); // DEBUG
+        
+        function flashScore_LetterGame() { 
+            if(letterGame_scoreFlashTimeout) clearTimeout(letterGame_scoreFlashTimeout);
+            if(scoreDisplayLetterGame) {
+                scoreDisplayLetterGame.classList.remove('score-flash');
+                void scoreDisplayLetterGame.offsetWidth; 
+                scoreDisplayLetterGame.classList.add('visible', 'score-flash');
+                letterGame_scoreFlashTimeout = setTimeout(() => scoreDisplayLetterGame.classList.remove('visible', 'score-flash'), 1500);
             }
         }
-
-
-        /**
-         * Handles input from the hidden text field (physical keyboard).
-         * @param {InputEvent} event - The input event object.
-         */
-        function handleTextInput(event) {
-            // startAudioContextIfNeeded(); // Removed
-            // playBackgroundMusic(); // Removed
-            if (!listeningForInput || guessingStage === 'done') return;
-
+        
+        function handleLetterGameTextInput(event) { 
+            if (waitingForKeyPressAfterReveal) return;
+            tryStartBackgroundMusic(); 
+            if (!letterGame_listeningForInput || letterGame_guessingStage === 'done') return;
             const guessedLetter = event.target.value.toLowerCase();
-            event.target.value = ''; // Clear the input field immediately
-
-            if (guessedLetter.length === 1 && guessedLetter.match(/[a-z]/i)) {
-                 // console.log(`Physical keyboard input: ${guessedLetter}`); // DEBUG
-                 processGuess(guessedLetter);
-            }
+            event.target.value = ''; 
+            if (guessedLetter.length === 1 && guessedLetter.match(/[a-z]/i)) processLetterGameGuess(guessedLetter);
+        }
+        function handleLetterGameOnScreenKeyPress(letter) { 
+             if (waitingForKeyPressAfterReveal) return;
+             tryStartBackgroundMusic(); 
+             if (!letterGame_listeningForInput || letterGame_guessingStage === 'done') return;
+             processLetterGameGuess(letter.toLowerCase());
         }
 
-        /**
-         * Handles clicks from the on-screen keyboard.
-         * @param {string} letter - The letter from the clicked button.
-         */
-        function handleOnScreenKeyPress(letter) {
-             // startAudioContextIfNeeded(); // Removed
-             // playBackgroundMusic(); // Removed
-             if (!listeningForInput || guessingStage === 'done') return;
-             // console.log(`On-screen keyboard input: ${letter}`); // DEBUG
-             processGuess(letter.toLowerCase());
-             // Removed focus call
-        }
-
-
-        /**
-         * Processes the guessed letter (from any source).
-         * --- MODIFIED: Show correct word on failure ---
-         * @param {string} guessedLetter - The validated single letter guess.
-         */
-        function processGuess(guessedLetter) {
-             // console.log(`Processing guess: ${guessedLetter}, Stage: ${guessingStage}`); // DEBUG
-             if (guessingStage === 'first') {
-                const firstLetter = currentWord[0];
+        function processLetterGameGuess(guessedLetter) {
+            if (waitingForKeyPressAfterReveal) return;
+            let pointsThisTurn = 0;
+             if (letterGame_guessingStage === 'first') {
+                const firstLetter = letterGame_currentWord[0];
                 const correct = guessedLetter === firstLetter;
                 if (correct) {
-                    displayedGuess[0] = firstLetter;
-                    firstLetterCorrect = true;
-                    score++; // Increment score for correct first letter
-                    updateScoreDisplay();
-                    flashScore();
-                    if (score > 0 && score % 10 === 0) showMilestoneNotification(score);
+                    letterGame_displayedGuess[0] = firstLetter; 
+                    letterGame_firstLetterCorrect = true; 
+                    pointsThisTurn++;
                 } else {
-                    firstLetterCorrect = false;
+                    letterGame_firstLetterCorrect = false; 
                 }
-                provideSlotFeedback(0, correct); // Provide feedback (no sound)
+                
+                letterGame_guessingStage = 'last'; 
+                promptDisplay.textContent = 'נחשו את האות האחרונה'; 
+                updateLetterGameGuessArea(); 
+                updateLetterGameHintButtonState(); 
+                if (!isTouchDevice) focusLetterGameHiddenInput();
 
-                guessingStage = 'last';
-                promptDisplay.textContent = 'Guess the LAST letter'; // Text Updated
-                updateGuessArea();
-                if (!isTouchDevice) {
-                    focusHiddenInput();
-                }
-
-            } else if (guessingStage === 'last') {
-                const lastLetter = currentWord[currentWord.length - 1];
-                const lastIndex = currentWord.length - 1;
+            } else if (letterGame_guessingStage === 'last') {
+                const lastLetter = letterGame_currentWord[letterGame_currentWord.length - 1];
+                const lastIndex = letterGame_currentWord.length - 1;
                 const correct = guessedLetter === lastLetter;
-                let showCorrectWord = false; // Flag to check if we need to show the word
-
+                let showCorrectWordFlag = false; 
                 if (correct) {
-                    displayedGuess[lastIndex] = lastLetter;
-                    lastLetterCorrect = true;
-                    score++; // Increment score for correct last letter
-                    updateScoreDisplay();
-                    flashScore();
-                    if (score > 0 && score % 10 === 0) showMilestoneNotification(score);
+                    letterGame_displayedGuess[lastIndex] = lastLetter; 
+                    letterGame_lastLetterCorrect = true; 
+                    pointsThisTurn++;
                 } else {
-                    lastLetterCorrect = false;
+                    letterGame_lastLetterCorrect = false; 
                 }
-                 provideSlotFeedback(lastIndex, correct); // Provide feedback (no sound)
+                
+                letterGame_guessingStage = 'done'; 
+                letterGame_listeningForInput = false; 
+                updateLetterGameGuessArea(); 
+                updateLetterGameHintButtonState(); 
+                updateManualEndGameButtonVisibility();
 
-                guessingStage = 'done';
-                updateGuessArea(); // Update to show final guess, remove highlight
 
-                listeningForInput = false; // Stop listening for this word
-                // console.log(`Word complete. First correct: ${firstLetterCorrect}, Last correct: ${lastLetterCorrect}`); // DEBUG
-
-                // --- MODIFIED: Show correct word if either guess was wrong ---
-                if (!firstLetterCorrect || !lastLetterCorrect) {
-                     correctWordOverlay.textContent = currentWord;
+                if (!letterGame_firstLetterCorrect || !letterGame_lastLetterCorrect) {
+                     correctWordOverlay.textContent = letterGame_currentWord;
                      correctWordOverlay.style.display = 'block';
-                     wordCard.style.boxShadow = '0 0 15px 5px rgba(248, 113, 113, 0.7)'; // Red glow
-                     showCorrectWord = true; // Set flag to delay next word
-                } else {
-                     wordCard.style.boxShadow = '0 0 15px 5px rgba(74, 222, 128, 0.7)'; // Green glow
-                }
+                     if(wordCard) wordCard.style.boxShadow = '0 0 15px 5px rgba(248, 113, 113, 0.7)'; 
+                     showCorrectWordFlag = true; 
+                } else if (wordCard) wordCard.style.boxShadow = '0 0 15px 5px rgba(74, 222, 128, 0.7)'; 
+                
+                score += pointsThisTurn; 
+                updateScoreDisplays();
+                if (pointsThisTurn > 0) flashScore_LetterGame();
 
-                // --- Check for Checkpoint ---
-                const nextWordNum = currentWordIndex + 1;
-                // --- MODIFIED: Calculate delay based on whether the word was shown ---
-                const baseDelay = 1200;
-                const extraDelay = showCorrectWord ? 2000 : 0; // Add 2 seconds if word shown
-                const totalDelay = baseDelay + extraDelay;
-
-                if (nextWordNum < totalWords && nextWordNum % checkpointInterval === 0) {
-                    // It's a checkpoint! Show the prompt after the delay.
-                    setTimeout(showCheckpointPrompt, totalDelay - 400); // Show slightly before full delay
+                if (showCorrectWordFlag) {
+                    showCorrectWordAndWait(); 
                 } else {
-                    // Not a checkpoint, proceed to next word after the calculated delay
-                    setTimeout(() => {
-                        currentWordIndex++;
-                        loadWord();
-                    }, totalDelay);
+                    if (score >= lastCheckpointScore + checkpointScoreInterval && currentLetterGameWordIndex < totalLetterGameWords -1 ) {
+                        lastCheckpointScore = Math.floor(score / checkpointScoreInterval) * checkpointScoreInterval;
+                        showCheckpointPrompt(); 
+                    } else {
+                        currentLetterGameWordIndex++; 
+                        setTimeout(() => { loadLetterGameWord(); }, 1200); 
+                    }
                 }
             }
         }
 
-         /**
-         * Shows the milestone notification.
-         * @param {number} points - The score milestone reached.
-         */
-        function showMilestoneNotification(points) {
-            milestoneNotification.textContent = `${points} Points!!! 🎉`;
-            milestoneNotification.classList.add('visible');
-            setTimeout(() => {
-                milestoneNotification.classList.remove('visible');
-            }, 2500); // Show for 2.5 seconds
+        function showCorrectWordAndWait() {
+            waitingForKeyPressAfterReveal = true;
+            letterGame_listeningForInput = false; 
+            updateLetterGameHintButtonState();
+            updateManualEndGameButtonVisibility();
+            if (revealedWordSpan) revealedWordSpan.textContent = letterGame_currentWord; // Display the word
+            if (correctWordPromptOverlayElement) correctWordPromptOverlayElement.classList.add('visible');
+
+            document.addEventListener('keydown', proceedAfterWordReveal, { once: true });
         }
 
-        /**
-         * Shows the checkpoint pop-up.
-         */
-        function showCheckpointPrompt() {
-            console.log("Showing checkpoint prompt"); // DEBUG
-            // stopBackgroundMusic(); // Removed
+        function proceedAfterWordReveal() {
+            if (!waitingForKeyPressAfterReveal) return; 
+
+            console.log("Proceeding after word reveal...");
+            waitingForKeyPressAfterReveal = false;
+            if (correctWordPromptOverlayElement) correctWordPromptOverlayElement.classList.remove('visible');
+            document.removeEventListener('keydown', proceedAfterWordReveal); 
+
+            if (score >= lastCheckpointScore + checkpointScoreInterval && currentLetterGameWordIndex < totalLetterGameWords -1 ) {
+                lastCheckpointScore = Math.floor(score / checkpointScoreInterval) * checkpointScoreInterval;
+                showCheckpointPrompt(); 
+            } else {
+                currentLetterGameWordIndex++; 
+                loadLetterGameWord(); 
+            }
+        }
+
+
+        function provideLetterGameHint() { 
+            if (letterGame_hintUsedForCurrentWord || letterGame_currentWord.length <= 2 || letterGame_guessingStage === 'done' || !letterGame_listeningForInput) {
+                updateLetterGameHintButtonState(); return;
+            }
+            score -= 0.5; 
+            updateScoreDisplays(); 
+            for (let i = 1; i < letterGame_currentWord.length - 1; i++) {
+                letterGame_displayedGuess[i] = letterGame_currentWord[i];
+            }
+            updateLetterGameGuessArea(); 
+            letterGame_hintUsedForCurrentWord = true;
+            updateLetterGameHintButtonState(); 
+            if ((letterGame_guessingStage === 'first' || letterGame_guessingStage === 'last') && !isTouchDevice) {
+                hiddenInput.focus();
+            }
+        }
+        
+        // --- WORD GROUP MINI-GAME ---
+        function startWordGroupGame() {
+            console.log("Starting Word Group Mini-Game...");
+            letterGame_listeningForInput = false; 
+            updateLetterGameHintButtonState(); 
+            
+            shuffledMiniGameGroups = [...wordGroupMiniGameData];
+            shuffleArray(shuffledMiniGameGroups);
+            currentMiniGameGroupIndex = 0;
+            miniGameRoundActive = true;
+            updateScoreDisplays(); 
+            loadWordGroup();
+            showPage('word-group-game-page');
+        }
+
+        function loadWordGroup() {
+            if (currentMiniGameGroupIndex >= shuffledMiniGameGroups.length) {
+                endWordGroupGame();
+                return;
+            }
+            miniGameRoundActive = true;
+            playWordSoundButton.disabled = false;
+            miniGameFeedback.textContent = '';
+            miniGameFeedback.className = 'mt-4'; 
+
+            const groupData = shuffledMiniGameGroups[currentMiniGameGroupIndex];
+            const wordsInGroup = [...groupData.words]; 
+            
+            currentMiniGameTargetWord = groupData.words[Math.floor(Math.random() * groupData.words.length)];
+            console.log("Mini-game target word:", currentMiniGameTargetWord);
+
+            wordGroupDisplay.innerHTML = '';
+            wordsInGroup.forEach((word, index) => {
+                const item = document.createElement('div');
+                item.classList.add('word-group-item', 'p-3', 'rounded-lg', 'shadow', 'bg-white', 'cursor-pointer', 'hover:bg-blue-100', 'transition-all');
+                item.innerHTML = `<span class="word-group-item-text text-xl">${word}</span><span class="word-group-item-number font-bold text-blue-600 ml-3">${index + 1}</span>`;
+                item.dataset.word = word;
+                item.dataset.index = index;
+                item.addEventListener('click', () => handleWordGroupGuess(word, item));
+                wordGroupDisplay.appendChild(item);
+            });
+            miniGameInstruction.textContent = "הקשיבו למילה ולחצו על המילה הנכונה:";
+            updateManualEndGameButtonVisibility();
+        }
+
+        function playTargetWordSound() {
+            if (!currentMiniGameTargetWord || synth.speaking || !bgMusicElement) return;
+            tryStartBackgroundMusic(); 
+
+            originalBgVolume = bgMusicElement.volume;
+            if (!bgMusicElement.paused && bgMusicElement.volume > 0.05) { 
+                bgMusicElement.volume = Math.max(0.05, originalBgVolume * 0.2); 
+                console.log(`BG music volume lowered to ${bgMusicElement.volume}`);
+            }
+
+            speechUtterance = new SpeechSynthesisUtterance(currentMiniGameTargetWord);
+            speechUtterance.lang = 'en-US'; 
+            speechUtterance.rate = 0.5; 
+            speechUtterance.pitch = 1.1;
+            
+            speechUtterance.onstart = () => {
+                console.log("Speech started for:", currentMiniGameTargetWord);
+                playWordSoundButton.disabled = true; 
+            };
+            
+            speechUtterance.onend = () => {
+                console.log("Speech ended.");
+                if(miniGameRoundActive) playWordSoundButton.disabled = false; 
+                if (!bgMusicElement.paused) {
+                    bgMusicElement.volume = originalBgVolume;
+                    console.log(`BG music volume restored to ${bgMusicElement.volume}`);
+                }
+            };
+            
+            speechUtterance.onerror = (event) => {
+                console.error("Speech synthesis error:", event.error);
+                if(miniGameRoundActive) playWordSoundButton.disabled = false;
+                if (!bgMusicElement.paused) {
+                    bgMusicElement.volume = originalBgVolume;
+                     console.log(`BG music volume restored (on error) to ${bgMusicElement.volume}`);
+                }
+            };
+            synth.speak(speechUtterance);
+        }
+
+        function handleWordGroupGuess(guessedWord, clickedItem) {
+            if (!miniGameRoundActive) return;
+            miniGameRoundActive = false; 
+            playWordSoundButton.disabled = true;
+
+            const correct = guessedWord.toLowerCase() === currentMiniGameTargetWord.toLowerCase();
+            
+            document.querySelectorAll('#word-group-display .word-group-item').forEach(item => {
+                item.style.pointerEvents = 'none'; 
+            });
+
+            if (correct) {
+                score++;
+                updateScoreDisplays();
+                miniGameFeedback.textContent = "נכון מאוד! כל הכבוד!";
+                miniGameFeedback.className = 'mt-4 feedback-correct';
+                clickedItem.classList.add('correct-mini-game');
+            } else {
+                miniGameFeedback.textContent = `טעות. המילה הנכונה היא: ${currentMiniGameTargetWord}`;
+                miniGameFeedback.className = 'mt-4 feedback-incorrect';
+                clickedItem.classList.add('incorrect-mini-game');
+                const correctItems = Array.from(wordGroupDisplay.children).filter(child => child.dataset.word.toLowerCase() === currentMiniGameTargetWord.toLowerCase());
+                correctItems.forEach(item => item.classList.add('correct-mini-game'));
+            }
+
+            currentMiniGameGroupIndex++;
+            setTimeout(() => {
+                 document.querySelectorAll('#word-group-display .word-group-item').forEach(item => {
+                    item.style.pointerEvents = 'auto'; 
+                });
+                loadWordGroup();
+            }, 2500); 
+        }
+        
+        function endWordGroupGame() {
+            console.log("Word Group Mini-Game Ended. Returning to Letter Game.");
+            miniGameRoundActive = false;
+            initializeLetterGame(true); 
+        }
+
+
+        // --- SHARED GAME FLOW & UI ---
+        function showMilestoneNotification(points) { 
+            const pointsToShow = points % 1 === 0 ? points : points.toFixed(1);
+            milestoneNotification.textContent = `${pointsToShow} Points!!! 🎉`;
+            milestoneNotification.classList.add('visible');
+            setTimeout(() => milestoneNotification.classList.remove('visible'), 2500); 
+        }
+        function showCheckpointPrompt() { 
+            letterGame_listeningForInput = false; 
+            updateLetterGameHintButtonState(); 
+            updateManualEndGameButtonVisibility();
             checkpointOverlay.classList.add('visible');
         }
-
-        /**
-         * Handles the "Continue" button click.
-         */
-        function handleCheckpointContinue() {
-            console.log("Checkpoint: Continue"); // DEBUG
-            checkpointOverlay.classList.remove('visible');
-            currentWordIndex++; // Move to the next word index
-            loadWord(); // Load the next word
-            // playBackgroundMusic(); // Removed
+        function handleCheckpointContinue() { 
+            checkpointOverlay.classList.remove('visible'); 
+            startWordGroupGame();
         }
-
-        /**
-         * Handles the "Finish" button click.
-         */
-        function handleCheckpointFinish() {
-             console.log("Checkpoint: Finish"); // DEBUG
-             checkpointOverlay.classList.remove('visible');
-             endGame(); // End the game early
+        function handleCheckpointFinish() { 
+             checkpointOverlay.classList.remove('visible'); 
+             handleOverallGameEnd("סיימת את המשחק."); 
         }
-
-
-        /**
-         * Creates spark elements for the victory animation.
-         */
-        function createSparks() {
-            sparkContainer.innerHTML = ''; // Clear old sparks
-            const sparkCount = 50; // Number of sparks
+        function createSparks() { 
+            sparkContainer.innerHTML = ''; 
+            const sparkCount = 50; 
             for (let i = 0; i < sparkCount; i++) {
-                const spark = document.createElement('div');
-                spark.classList.add('spark');
-                const startX = 50 + (Math.random() - 0.5) * 20; // %
-                const startY = 50 + (Math.random() - 0.5) * 20; // %
-                spark.style.left = `${startX}%`;
-                spark.style.top = `${startY}%`;
-
+                const spark = document.createElement('div'); spark.classList.add('spark');
+                const startX = 50 + (Math.random() - 0.5) * 20; 
+                const startY = 50 + (Math.random() - 0.5) * 20; 
+                spark.style.left = `${startX}%`; spark.style.top = `${startY}%`;
                 const angle = Math.random() * Math.PI * 2;
-                const distance = 100 + Math.random() * 150; // pixels
-                const endX = Math.cos(angle) * distance;
-                const endY = Math.sin(angle) * distance;
-
-                spark.style.setProperty('--tx', `${endX}px`);
-                spark.style.setProperty('--ty', `${endY}px`);
-
-                 const hue = 35 + Math.random() * 25; // Gold/Yellow/Orange range
-                 spark.style.backgroundColor = `hsl(${hue}, 100%, 50%)`;
-
+                const distance = 100 + Math.random() * 150; 
+                const endX = Math.cos(angle) * distance; const endY = Math.sin(angle) * distance;
+                spark.style.setProperty('--tx', `${endX}px`); spark.style.setProperty('--ty', `${endY}px`);
+                const hue = 35 + Math.random() * 25; 
+                spark.style.backgroundColor = `hsl(${hue}, 100%, 50%)`;
                 sparkContainer.appendChild(spark);
-
-                spark.addEventListener('animationend', () => {
-                    spark.remove();
-                });
+                spark.addEventListener('animationend', () => spark.remove());
             }
         }
+        
+        function handleOverallGameEnd(customMessage = "") { 
+            letterGame_listeningForInput = false; 
+            miniGameRoundActive = false;
+            if(keyboardArea) keyboardArea.classList.remove('visible'); 
+            if(scoreDisplayLetterGame) scoreDisplayLetterGame.classList.remove('visible', 'score-flash');
+            if(scoreDisplayMiniGame) scoreDisplayMiniGame.classList.remove('visible'); 
+            if (letterGame_scoreFlashTimeout) clearTimeout(letterGame_scoreFlashTimeout);
+            updateLetterGameHintButtonState(); 
+            updateManualEndGameButtonVisibility();
+            updateScoreDisplays(); 
 
-        /**
-         * --- REMOVED: playVictorySound function ---
-         */
-
-
-        /**
-         * Ends the game and displays the final message, sparks, and sound.
-         * --- MODIFIED: Save score before showing message ---
-         */
-        function endGame() {
-            // console.log("Ending game. Final score:", score); // DEBUG
-            listeningForInput = false; // Stop listening
-            // stopBackgroundMusic(); // Removed
-            keyboardArea.classList.remove('visible'); // Hide keyboard if visible
-            scoreDisplay.classList.remove('visible', 'score-flash');
-            if (scoreFlashTimeout) clearTimeout(scoreFlashTimeout);
-
-            // --- MODIFIED: Check if score qualifies ---
-            finalScoreToSave = score; // Store the score temporarily
+            finalScoreToSave = score; 
             if (checkIfHighScore(finalScoreToSave)) {
-                 console.log("New high score!"); // DEBUG
-                 showNamePrompt(); // Show name prompt instead of game over message
+                showNamePrompt(); 
             } else {
-                 console.log("Score did not qualify for high scores."); // DEBUG
-                 showGameOverMessage(); // Show regular game over message
+                showGameOverMessage(customMessage); 
+            }
+        }
+        
+        function handleManualGameEnd() {
+            console.log("Manual game end triggered.");
+            handleOverallGameEnd("המשחק הסתיים לבקשתך.");
+        }
+
+        function updateManualEndGameButtonVisibility() {
+            const isLetterGameActive = letterGamePage.classList.contains('active') && letterGame_listeningForInput;
+            const isMiniGameActive = wordGroupGamePage.classList.contains('active') && miniGameRoundActive;
+
+            if (manualEndGameButton) {
+                manualEndGameButton.style.display = isLetterGameActive ? 'inline-block' : 'none';
+            }
+            if (manualEndMiniGameButton) {
+                 manualEndMiniGameButton.style.display = isMiniGameActive ? 'inline-block' : 'none';
             }
         }
 
-        /**
-         * Checks if a score qualifies for the high score list.
-         * @param {number} currentScore - The score to check.
-         * @returns {boolean} True if the score qualifies, false otherwise.
-         */
-         function checkIfHighScore(currentScore) {
+
+        function checkIfHighScore(currentScore) { 
              const highScores = loadHighScores();
-             // Qualifies if list has < MAX spots OR score is > lowest score on full list
              return highScores.length < MAX_HIGH_SCORES || currentScore > (highScores[MAX_HIGH_SCORES - 1]?.score ?? 0);
-         }
-
-         /**
-          * Shows the name prompt overlay.
-          */
-         function showNamePrompt() {
-             playerNameInput.value = ''; // Clear previous name
+        }
+        function showNamePrompt() { 
+             letterGame_listeningForInput = false; miniGameRoundActive = false;
+             updateLetterGameHintButtonState(); 
+             updateManualEndGameButtonVisibility();
+             playerNameInput.value = ''; 
              namePromptOverlay.classList.add('visible');
-             // Focus the input field for convenience
              setTimeout(() => playerNameInput.focus(), 100);
-         }
-
-         /**
-          * Handles the submission of the player's name.
-          */
-         function handleNameSubmit() {
-             const playerName = playerNameInput.value.trim() || "Anonymous"; // Default name
-             console.log(`Saving high score: ${playerName} - ${finalScoreToSave}`); // DEBUG
-             saveHighScore(playerName, finalScoreToSave); // Save name and score
+        }
+        function handleNameSubmit() { 
+             const playerName = playerNameInput.value.trim() || "Anonymous"; 
+             saveHighScore(playerName, finalScoreToSave); 
              namePromptOverlay.classList.remove('visible');
-             showGameOverMessage(); // Now show the game over message
-         }
+             showGameOverMessage(); 
+        }
+        function showGameOverMessage(customMessage = "") { 
+            letterGame_listeningForInput = false; miniGameRoundActive = false;
+            updateLetterGameHintButtonState(); 
+            updateManualEndGameButtonVisibility();
+            const maxLetterGameScore = totalLetterGameWords * 2;
+            const percentageOfLetterGame = maxLetterGameScore > 0 ? (score / maxLetterGameScore) * 100 : 0; 
+            let finalMessageText = customMessage;
+            const scoreToDisplayInMessage = finalScoreToSave % 1 === 0 ? finalScoreToSave : finalScoreToSave.toFixed(1);
 
 
-        /**
-         * Displays the final game over message.
-         */
-        function showGameOverMessage() {
-            const maxScore = totalWords * 2;
-            const percentage = maxScore > 0 ? (finalScoreToSave / maxScore) * 100 : 0;
-            let finalMessage = '';
-
-             if (percentage < 50) {
-                finalMessage = "נסו שוב";
-            } else if (percentage <= 74) {
-                finalMessage = "מאמץ יפה המשיכו אני מזהה את הפוטנציאל";
-            } else if (percentage <= 89) {
-                finalMessage = "אתם מצויינים עוד קצת ואתם בפסגה";
-            } else { // 90% - 100%
-                finalMessage = "מושלם אתם אשפי האנגלית";
-                // Trigger Victory Effects only if score was high enough
-                createSparks();
-                // playVictorySound(); // Removed
+            if (!customMessage) { 
+                if (percentageOfLetterGame < 50) finalMessageText = "נסו שוב";
+                else if (percentageOfLetterGame <= 74) finalMessageText = "מאמץ יפה המשיכו אני מזהה את הפוטנציאל";
+                else if (percentageOfLetterGame <= 89) finalMessageText = "אתם מצויינים עוד קצת ואתם בפסגה";
+                else { finalMessageText = "מושלם אתם אשפי האנגלית"; createSparks(); }
+            } else {
+                 if (score >= (maxLetterGameScore + wordGroupMiniGameData.length * 0.8)) createSparks(); 
             }
 
             messageTitle.textContent = "Game Over!";
-            messageText.textContent = `Your score: ${finalScoreToSave} / ${maxScore}. ${finalMessage}`;
+            messageText.textContent = `Your final score: ${scoreToDisplayInMessage}. ${finalMessageText}`;
             messageOverlay.classList.add('visible');
         }
-
-
-        // --- Navigation Functions ---
-        function toggleMobileMenu() {
-            mobileNavMenu.classList.toggle('visible');
-        }
-
-        function showPage(pageId) {
-            console.log("Showing page:", pageId); // DEBUG
-            pages.forEach(page => {
-                page.classList.toggle('active', page.id === pageId);
-            });
-
-            // Update active link state
-            const allLinks = document.querySelectorAll('.nav-link');
-            allLinks.forEach(link => {
-                link.classList.toggle('active', link.dataset.page === pageId);
-            });
-
-            // Hide mobile menu after selection
-            mobileNavMenu.classList.remove('visible');
-
-            // Handle page-specific logic
-            if (pageId === 'game-page') {
-                // Ensure game elements are potentially visible
-                 gamePageContainer.classList.add('visible'); // Make sure game container is visible
-                scoreDisplay.style.display = ''; // Or set based on flash logic
-                if(isTouchDevice) keyboardArea.classList.add('visible');
-                // --- REMOVED: Music start call ---
-            } else {
-                // Hide game-specific elements when not on game page
-                // stopBackgroundMusic(); // Removed
-                scoreDisplay.classList.remove('visible', 'score-flash');
-                 if (scoreFlashTimeout) clearTimeout(scoreFlashTimeout);
-                keyboardArea.classList.remove('visible');
-                milestoneNotification.classList.remove('visible');
-                messageOverlay.classList.remove('visible'); // Hide game over screen if navigating away
-                 checkpointOverlay.classList.remove('visible'); // Hide checkpoint screen if navigating away
-                 namePromptOverlay.classList.remove('visible'); // Hide name prompt if navigating away
-
-                 // Display high scores when showing that page
-                 if (pageId === 'high-scores-page') {
-                     displayHighScores();
-                 }
-            }
-        }
-
-        function handleNavClick(event) {
-            event.preventDefault(); // Prevent default anchor link behavior
-            const pageId = event.target.dataset.page;
-            if (pageId) {
-                showPage(pageId);
-            }
-        }
-
-        // --- High Score Functions ---
-
-        /**
-         * Loads high scores from localStorage.
-         * @returns {Array<{name: string, score: number}>} Array of high score objects.
-         */
-        function loadHighScores() {
-            try {
-                const scoresJSON = localStorage.getItem(HIGH_SCORES_KEY);
-                return scoresJSON ? JSON.parse(scoresJSON) : [];
-            } catch (error) {
-                console.error("Error loading high scores from localStorage:", error);
-                return []; // Return empty array on error
-            }
-        }
-
-        /**
-         * Saves a new score (with name) to localStorage.
-         * @param {string} name - The player's name.
-         * @param {number} newScore - The score to save.
-         */
-        function saveHighScore(name, newScore) {
-            if (typeof newScore !== 'number' || newScore < 0) return; // Basic validation
-
-            try {
-                const scores = loadHighScores();
-                scores.push({ name: name, score: newScore }); // Add new score object
-                scores.sort((a, b) => b.score - a.score); // Sort descending by score
-                const topScores = scores.slice(0, MAX_HIGH_SCORES); // Keep only top N
-                localStorage.setItem(HIGH_SCORES_KEY, JSON.stringify(topScores));
-                console.log("High scores saved:", topScores); // DEBUG
-            } catch (error) {
-                console.error("Error saving high score to localStorage:", error);
-            }
-        }
-
-        /**
-         * Displays the high scores list on the page.
-         * --- MODIFIED: Added " נקודות" ---
-         */
+        
         function displayHighScores() {
             const scores = loadHighScores();
-            highScoresList.innerHTML = ''; // Clear previous list
+            highScoresListDisplay.innerHTML = ''; 
 
             if (scores.length === 0) {
-                noScoresMessage.style.display = 'block'; // Show message
+                noScoresDisplayMessage.style.display = 'block';
             } else {
-                noScoresMessage.style.display = 'none'; // Hide message
-                scores.forEach((scoreData, index) => {
+                noScoresDisplayMessage.style.display = 'none';
+                scores.forEach((scoreItem, index) => {
                     const li = document.createElement('li');
                     li.classList.add('score-entry');
-
+                    if (index < 3) { 
+                        li.classList.add(`rank-${index + 1}`);
+                    }
+                    
                     const rankSpan = document.createElement('span');
                     rankSpan.classList.add('rank');
-                    rankSpan.textContent = `${index + 1}.`; // Rank starts at 1
+                    rankSpan.textContent = `${index + 1}.`;
 
                     const nameSpan = document.createElement('span');
                     nameSpan.classList.add('player-name');
-                    nameSpan.textContent = scoreData.name; // Display name
+                    nameSpan.textContent = scoreItem.name;
+                    
+                    const scoreContainerSpan = document.createElement('span'); 
+                    scoreContainerSpan.classList.add('score-value-container');
 
-                    const scoreSpan = document.createElement('span');
-                    scoreSpan.classList.add('score-value');
-                    // --- MODIFIED: Append " נקודות" ---
-                    scoreSpan.textContent = `${scoreData.score} נקודות`; // Display score with text
+                    const scoreValueSpan = document.createElement('span');
+                    scoreValueSpan.classList.add('score-value');
+                    scoreValueSpan.textContent = scoreItem.score % 1 === 0 ? scoreItem.score : scoreItem.score.toFixed(1);
 
-                    // Add special styling for top 3
-                    if (index === 0) li.classList.add('rank-1');
-                    else if (index === 1) li.classList.add('rank-2');
-                    else if (index === 2) li.classList.add('rank-3');
+                    const scoreUnitSpan = document.createElement('span');
+                    scoreUnitSpan.classList.add('score-unit');
+                    scoreUnitSpan.textContent = 'נקודות';
+                    
+                    scoreContainerSpan.appendChild(scoreValueSpan);
+                    scoreContainerSpan.appendChild(scoreUnitSpan);
 
                     li.appendChild(rankSpan);
-                    li.appendChild(nameSpan); // Add name span
-                    li.appendChild(scoreSpan);
-                    highScoresList.appendChild(li);
+                    li.appendChild(nameSpan);
+                    li.appendChild(scoreContainerSpan);
+                    highScoresListDisplay.appendChild(li);
                 });
             }
         }
 
+        function loadHighScores() { 
+            try {
+                const scoresJSON = localStorage.getItem(HIGH_SCORES_KEY);
+                return scoresJSON ? JSON.parse(scoresJSON) : [];
+            } catch (error) { console.error("Error loading high scores:", error); return []; }
+        }
+        function saveHighScore(name, newScore) { 
+            if (typeof newScore !== 'number' || newScore < 0) return; 
+            try {
+                const scores = loadHighScores();
+                scores.push({ name: name, score: newScore }); 
+                scores.sort((a, b) => b.score - a.score); 
+                localStorage.setItem(HIGH_SCORES_KEY, JSON.stringify(scores.slice(0, MAX_HIGH_SCORES)));
+            } catch (error) { console.error("Error saving high score:", error); }
+        }
 
         // --- Event Listeners ---
         restartButton.addEventListener('click', () => {
-             showPage('game-page'); // Ensure game page is visible before starting
-             initializeGame(); // Use initializeGame for restart
+            currentLetterGameWordIndex = 0; 
+            score = 0; 
+            lastCheckpointScore = 0; 
+            initializeLetterGame();
         });
+        if (hintButton) { 
+            hintButton.addEventListener('click', provideLetterGameHint); 
+        }
+        if (manualEndGameButton) {
+            manualEndGameButton.addEventListener('click', handleManualGameEnd);
+        }
+        if (manualEndMiniGameButton) {
+            manualEndMiniGameButton.addEventListener('click', () => {
+                handleOverallGameEnd("המשחק הסתיים לבקשתך.");
+            });
+        }
 
-        // --- Initial Setup ---
+        if (playWordSoundButton) {
+            playWordSoundButton.addEventListener('click', playTargetWordSound);
+        }
+        if (leaderboardButton) {
+            leaderboardButton.addEventListener('click', () => {
+                messageOverlay.classList.remove('visible'); 
+                displayHighScores();
+                showPage('leaderboard-page');
+            });
+        }
+        if (backToGameButton) {
+            backToGameButton.addEventListener('click', () => {
+                currentLetterGameWordIndex = 0; 
+                score = 0; 
+                lastCheckpointScore = 0;
+                initializeLetterGame(); 
+            });
+        }
+        if(navLinkGame) {
+            navLinkGame.addEventListener('click', (e) => {
+                e.preventDefault();
+                messageOverlay.classList.remove('visible');
+                checkpointOverlay.classList.remove('visible');
+                namePromptOverlay.classList.remove('visible');
+                correctWordPromptOverlayElement.classList.remove('visible');
+
+
+                currentLetterGameWordIndex = 0; 
+                score = 0; 
+                lastCheckpointScore = 0;
+                initializeLetterGame(); 
+            });
+        }
+        if(navLinkLeaderboard) {
+            navLinkLeaderboard.addEventListener('click', (e) => {
+                e.preventDefault();
+                messageOverlay.classList.remove('visible');
+                checkpointOverlay.classList.remove('visible');
+                namePromptOverlay.classList.remove('visible');
+                correctWordPromptOverlayElement.classList.remove('visible');
+                
+                displayHighScores();
+                showPage('leaderboard-page');
+            });
+        }
+
+
         window.onload = () => {
-            // Setup navigation first
-            mainNavLinks.forEach(link => link.addEventListener('click', handleNavClick));
-            mobileNavLinks.forEach(link => link.addEventListener('click', handleNavClick));
-            hamburgerButton.addEventListener('click', toggleMobileMenu);
-            // soundToggleButton.addEventListener('click', toggleMute); // Removed
             checkpointContinueButton.addEventListener('click', handleCheckpointContinue);
             checkpointFinishButton.addEventListener('click', handleCheckpointFinish);
             submitNameButton.addEventListener('click', handleNameSubmit);
-            restartButton.addEventListener('click', () => { // Restart button in game over
-                showPage('game-page');
-                initializeGame();
-            });
-
-            // --- MODIFIED: Initialize game directly, no start button ---
+            
             console.log("Page loaded, initializing game UI.");
-            initializeGame(); // Initialize game state and UI
-            showPage('game-page'); // Show the game page immediately
-
-             // --- REMOVED: Listener for first interaction to start audio ---
-             // Audio context is now started within the first guess/toggle event
-
+            currentLetterGameWordIndex = 0; 
+            score = 0; 
+            lastCheckpointScore = 0;
+            initializeLetterGame(); 
         };
-
     </script>
 
 </body>
