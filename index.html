@@ -10,17 +10,33 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
+        * {
+            box-sizing: border-box;
+        }
+        html {
+            height: 100%;
+            margin: 0;
+            overflow: hidden; 
+        }
         body {
             font-family: 'Assistant', 'Inter', sans-serif;
             user-select: none;
             -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none;
-            overflow-y: auto; background-color: #f0f4f8; position: relative; min-height: 100vh;
-            padding-top: 70px; 
+            background-color: #f0f4f8; 
+            position: relative; 
+            height: 100%; 
+            margin: 0;
+            padding-top: 60px; 
+            display: flex; 
+            flex-direction: column; 
+            overflow-y: auto; 
         }
 
         #global-nav {
             position: fixed; top: 0; left: 0; right: 0;
-            background-color: #1e293b; padding: 10px 20px;
+            background-color: #1e293b; 
+            padding: 0 20px; 
+            height: 60px; 
             box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 1100;
             display: flex; justify-content: center; align-items: center;
         }
@@ -32,12 +48,20 @@
         #global-nav .nav-link:hover { background-color: #334155; color: white; }
         #global-nav .nav-link.active-nav { background-color: #4f46e5; color: white; }
 
-        main { display: none; width: 100%; }
-        main.active { display: block; }
+        main { 
+            display: none; 
+            width: 100%; 
+            flex-grow: 1; 
+            overflow-y: auto; 
+        }
+        main.active { 
+            display: block !important; 
+        }
 
         .game-container, .mini-game-container, .leaderboard-container {
             display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
-            padding: 20px 20px 150px 20px; position: relative; min-height: calc(100vh - 70px);
+            padding: 20px 20px 150px 20px; 
+            width: 100%; 
         }
         .word-card {
             width: 90%; max-width: 700px; height: 300px; background-color: #ffffff;
@@ -180,12 +204,12 @@
             color: #1e293b;
             line-height: 1.7;
         }
-        #revealed-word-span { /* Style for the revealed word */
+        #revealed-word-span { 
             font-weight: bold;
-            color: #2563eb; /* blue-600 */
+            color: #2563eb; 
             font-size: 1.4rem;
-            direction: ltr; /* Ensure English word is displayed LTR */
-            display: inline-block; /* Allows margin/padding if needed */
+            direction: ltr; 
+            display: inline-block; 
             margin: 0 5px;
         }
 
@@ -466,7 +490,7 @@
         const manualEndGameButton = document.getElementById('manual-end-game-button'); 
         const correctWordOverlay = document.getElementById('correct-word-overlay');
         const correctWordPromptOverlayElement = document.getElementById('correct-word-prompt-overlay'); 
-        const revealedWordSpan = document.getElementById('revealed-word-span'); // Span for the revealed word
+        const revealedWordSpan = document.getElementById('revealed-word-span'); 
 
         const scoreDisplayMiniGame = document.querySelector('#word-group-game-page #score-mini-game');
         const miniGameInstruction = document.getElementById('mini-game-instruction');
@@ -593,6 +617,7 @@
         let finalScoreToSave = 0;
         let lastCheckpointScore = 0; 
         let waitingForKeyPressAfterReveal = false; 
+        let inputLockUntilNextInteraction = false; 
 
         // --- Letter Game State ---
         let currentLetterGameWordIndex = 0;
@@ -698,6 +723,7 @@
             
             letterGame_listeningForInput = true; 
             waitingForKeyPressAfterReveal = false; 
+            inputLockUntilNextInteraction = false; 
             loadLetterGameWord(); 
             
             hiddenInput.removeEventListener('input', handleLetterGameTextInput);
@@ -753,7 +779,7 @@
         }
         
         function focusLetterGameHiddenInput() { 
-            if (waitingForKeyPressAfterReveal) return; 
+            if (waitingForKeyPressAfterReveal || inputLockUntilNextInteraction) return; 
             tryStartBackgroundMusic(); 
             if (letterGame_listeningForInput && letterGame_guessingStage !== 'done' && !isTouchDevice) {
                 hiddenInput.focus();
@@ -805,6 +831,11 @@
         }
 
         function loadLetterGameWord() {
+            if (hiddenInput) hiddenInput.value = ''; 
+            letterGame_listeningForInput = false; 
+            waitingForKeyPressAfterReveal = false; 
+            inputLockUntilNextInteraction = false; // Reset lock here
+
             if (currentLetterGameWordIndex >= totalLetterGameWords) { 
                 handleOverallGameEnd("כל הכבוד! סיימת את כל המילים במשחק הניחוש!"); 
                 return; 
@@ -813,17 +844,18 @@
             if (!currentData || !currentData.word) { currentLetterGameWordIndex++; loadLetterGameWord(); return; }
             
             letterGame_currentWord = currentData.word.toLowerCase();
-            letterGame_firstLetterCorrect = false; letterGame_lastLetterCorrect = false; 
-            letterGame_guessingStage = 'first';
+            letterGame_firstLetterCorrect = false; 
+            letterGame_lastLetterCorrect = false;  
+            letterGame_guessingStage = 'first';   
             letterGame_hintUsedForCurrentWord = false; 
-            letterGame_listeningForInput = true; 
-            waitingForKeyPressAfterReveal = false;
+            letterGame_displayedGuess = Array(letterGame_currentWord.length).fill('_'); 
 
+            console.log(`loadLetterGameWord: Reset state for '${letterGame_currentWord}'. Stage: ${letterGame_guessingStage}, FirstCorrect: ${letterGame_firstLetterCorrect}`);
 
             promptDisplay.textContent = `נחשו את האות הראשונה`;
             correctWordOverlay.style.display = 'none'; correctWordOverlay.textContent = '';
-            letterGame_displayedGuess = Array(letterGame_currentWord.length).fill('_');
-            updateLetterGameGuessArea();
+            
+            updateLetterGameGuessArea(); 
             
             const randomAnimation = animations[Math.floor(Math.random() * animations.length)];
             imageDisplay.className = 'image-display'; textDisplay.className = 'text-display';
@@ -842,10 +874,17 @@
             }
             if(wordCard) wordCard.style.boxShadow = '0 10px 20px rgba(0, 0, 0, 0.1)';
             updateScoreDisplays(); 
-            updateLetterGameHintButtonState(); 
-            updateManualEndGameButtonVisibility();
             
-            if (!isTouchDevice) setTimeout(focusLetterGameHiddenInput, 100);
+            setTimeout(() => { 
+                letterGame_listeningForInput = true; 
+                updateLetterGameGuessArea(); 
+                updateLetterGameHintButtonState(); 
+                updateManualEndGameButtonVisibility();
+                if (!isTouchDevice) {
+                    focusLetterGameHiddenInput(); 
+                }
+                console.log("Input listening enabled for new word after delay in loadLetterGameWord.");
+            }, 100); // Increased delay
         }
 
         function handleLetterGameImageError(imgElement, word) { 
@@ -867,22 +906,31 @@
         }
         
         function handleLetterGameTextInput(event) { 
-            if (waitingForKeyPressAfterReveal) return;
+            if (waitingForKeyPressAfterReveal || inputLockUntilNextInteraction || !letterGame_listeningForInput) {
+                if (event && event.target) event.target.value = '';
+                return;
+            }
             tryStartBackgroundMusic(); 
-            if (!letterGame_listeningForInput || letterGame_guessingStage === 'done') return;
+            if (letterGame_guessingStage === 'done') { // Double check, should be caught by listeningForInput
+                if (event && event.target) event.target.value = '';
+                return;
+            }
             const guessedLetter = event.target.value.toLowerCase();
-            event.target.value = ''; 
-            if (guessedLetter.length === 1 && guessedLetter.match(/[a-z]/i)) processLetterGameGuess(guessedLetter);
+            if (event && event.target) event.target.value = ''; 
+            
+            if (guessedLetter.length === 1 && guessedLetter.match(/[a-z]/i)) {
+                 processLetterGameGuess(guessedLetter);
+            }
         }
         function handleLetterGameOnScreenKeyPress(letter) { 
-             if (waitingForKeyPressAfterReveal) return;
+             if (waitingForKeyPressAfterReveal || inputLockUntilNextInteraction || !letterGame_listeningForInput) return;
              tryStartBackgroundMusic(); 
-             if (!letterGame_listeningForInput || letterGame_guessingStage === 'done') return;
+             if (letterGame_guessingStage === 'done') return;
              processLetterGameGuess(letter.toLowerCase());
         }
 
         function processLetterGameGuess(guessedLetter) {
-            if (waitingForKeyPressAfterReveal) return;
+            if (waitingForKeyPressAfterReveal || inputLockUntilNextInteraction || !letterGame_listeningForInput) return;
             let pointsThisTurn = 0;
              if (letterGame_guessingStage === 'first') {
                 const firstLetter = letterGame_currentWord[0];
@@ -947,31 +995,40 @@
         }
 
         function showCorrectWordAndWait() {
-            waitingForKeyPressAfterReveal = true;
             letterGame_listeningForInput = false; 
+            waitingForKeyPressAfterReveal = true;
+            inputLockUntilNextInteraction = true; 
             updateLetterGameHintButtonState();
             updateManualEndGameButtonVisibility();
-            if (revealedWordSpan) revealedWordSpan.textContent = letterGame_currentWord; // Display the word
+            if (revealedWordSpan) revealedWordSpan.textContent = letterGame_currentWord; 
             if (correctWordPromptOverlayElement) correctWordPromptOverlayElement.classList.add('visible');
 
-            document.addEventListener('keydown', proceedAfterWordReveal, { once: true });
+            document.addEventListener('keydown', proceedAfterWordRevealHandler, { once: true });
         }
-
-        function proceedAfterWordReveal() {
+        
+        // Renamed to avoid conflict with any potential global proceedAfterWordReveal
+        function proceedAfterWordRevealHandler(event) { 
             if (!waitingForKeyPressAfterReveal) return; 
+            // event.preventDefault(); // Optional: if you want to prevent default key action
+            // event.stopPropagation(); // Optional: if you want to stop event bubbling
 
-            console.log("Proceeding after word reveal...");
-            waitingForKeyPressAfterReveal = false;
+            console.log("Proceeding after word reveal (keydown).");
+            
             if (correctWordPromptOverlayElement) correctWordPromptOverlayElement.classList.remove('visible');
-            document.removeEventListener('keydown', proceedAfterWordReveal); 
+            waitingForKeyPressAfterReveal = false; 
+            // inputLockUntilNextInteraction remains true, will be reset by loadLetterGameWord
 
-            if (score >= lastCheckpointScore + checkpointScoreInterval && currentLetterGameWordIndex < totalLetterGameWords -1 ) {
-                lastCheckpointScore = Math.floor(score / checkpointScoreInterval) * checkpointScoreInterval;
-                showCheckpointPrompt(); 
-            } else {
-                currentLetterGameWordIndex++; 
-                loadLetterGameWord(); 
-            }
+            // Short delay before loading next word to ensure event queue is clear
+            // and to give a moment for the user to process the key press was for the prompt
+            setTimeout(() => {
+                if (score >= lastCheckpointScore + checkpointScoreInterval && currentLetterGameWordIndex < totalLetterGameWords - 1 ) {
+                    lastCheckpointScore = Math.floor(score / checkpointScoreInterval) * checkpointScoreInterval;
+                    showCheckpointPrompt(); 
+                } else {
+                    currentLetterGameWordIndex++; 
+                    loadLetterGameWord(); 
+                }
+            }, 50); 
         }
 
 
