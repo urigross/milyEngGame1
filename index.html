@@ -16,7 +16,7 @@
         html {
             height: 100%;
             margin: 0;
-            overflow: hidden; 
+            overflow-x: hidden; /* Prevent horizontal scroll on html */
         }
         body {
             font-family: 'Assistant', 'Inter', sans-serif;
@@ -32,28 +32,106 @@
             overflow-y: auto; 
         }
 
+        /* Navigation Bar Styles */
         #global-nav {
             position: fixed; top: 0; left: 0; right: 0;
             background-color: #1e293b; 
             padding: 0 10px; 
             height: 60px; 
             box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 1100;
-            display: flex; justify-content: center; align-items: center;
+            display: flex; justify-content: space-between; /* Changed for hamburger */
+            align-items: center;
+        }
+        #desktop-nav-links { /* Container for desktop links */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-grow: 1; /* Allow it to take space */
         }
         #global-nav .nav-link {
             color: #f1f5f9; text-decoration: none; padding: 8px 12px; 
             margin: 0 5px; 
             border-radius: 6px; font-weight: 600;
             transition: background-color 0.2s ease, color 0.2s ease;
-            font-size: 0.85rem; /* Adjusted for more links */
-            white-space: nowrap; /* Prevent wrapping of link text */
+            font-size: 0.85rem; 
+            white-space: nowrap; 
         }
         #global-nav .nav-link:hover:not(.disabled-nav-link) { background-color: #334155; color: white; }
         #global-nav .nav-link.active-nav { background-color: #4f46e5; color: white; }
         #global-nav .nav-link.disabled-nav-link {
-            color: #64748b; /* slate-500 */
+            color: #64748b; 
             cursor: not-allowed;
-            background-color: transparent !important; /* Ensure no hover effect */
+            background-color: transparent !important; 
+        }
+
+        /* Hamburger Menu Styles */
+        #hamburger-button {
+            display: none; /* Hidden by default, shown on mobile */
+            flex-direction: column;
+            justify-content: space-around;
+            width: 30px;
+            height: 25px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            z-index: 1200; /* Above nav content */
+        }
+        #hamburger-button span {
+            width: 100%;
+            height: 3px;
+            background-color: #f1f5f9; /* Light color for bars */
+            border-radius: 2px;
+            transition: all 0.3s linear;
+        }
+        /* Hamburger animation */
+        #hamburger-button.open span:nth-child(1) { transform: translateY(9px) rotate(45deg); }
+        #hamburger-button.open span:nth-child(2) { opacity: 0; }
+        #hamburger-button.open span:nth-child(3) { transform: translateY(-9px) rotate(-45deg); }
+
+
+        #mobile-nav-menu {
+            display: none;
+            position: fixed;
+            top: 60px; /* Below the main navbar */
+            left: 0;
+            right: 0;
+            background-color: #334155; /* Slightly lighter than main nav for distinction */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            z-index: 1150; /* Above main content, below hamburger if it overlaps */
+            padding: 10px 0;
+        }
+        #mobile-nav-menu.active {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #mobile-nav-menu .nav-link {
+            display: block;
+            width: 100%;
+            text-align: center;
+            padding: 12px 20px;
+            color: #e2e8f0; /* slate-200 */
+            text-decoration: none;
+            font-weight: 500;
+            border-bottom: 1px solid #475569; /* slate-600 for separator */
+        }
+        #mobile-nav-menu .nav-link:last-child {
+            border-bottom: none;
+        }
+        #mobile-nav-menu .nav-link:hover:not(.disabled-nav-link) {
+            background-color: #4f46e5; /* indigo-600 */
+            color: white;
+        }
+        #mobile-nav-menu .nav-link.active-nav {
+            background-color: #4f46e5; /* indigo-600 */
+            color: white;
+            font-weight: bold;
+        }
+         #mobile-nav-menu .nav-link.disabled-nav-link {
+            color: #64748b; 
+            cursor: not-allowed;
+            background-color: transparent !important;
         }
 
 
@@ -436,16 +514,50 @@
         .anim-zoomIn { animation-name: zoomIn; }
         .anim-bounceIn { animation-name: bounceIn; }
         .anim-rubberBand { animation-name: rubberBand; }
+
+        /* Responsive Navigation */
+        @media (max-width: 768px) { /* Adjust breakpoint as needed */
+            #desktop-nav-links {
+                display: none;
+            }
+            #hamburger-button {
+                display: flex;
+            }
+            #global-nav {
+                 justify-content: flex-end; /* Push hamburger to the right */
+            }
+        }
+         @media (min-width: 769px) { /* Adjust breakpoint as needed */
+            #mobile-nav-menu {
+                display: none !important; /* Ensure mobile menu is hidden on desktop */
+            }
+        }
+
     </style>
 </head>
 <body class="bg-gray-100">
     <nav id="global-nav">
-        <a href="#" id="nav-link-standard-game" class="nav-link active-nav">מסלול כל אוצר המילים</a>
-        <a href="#" id="nav-link-focused-game" class="nav-link">מסלול למידה ממוקד</a>
-        <a href="#" id="nav-link-leaderboard" class="nav-link">לוח שיאים</a>
-        <a href="#" id="nav-link-settings" class="nav-link">הגדרות</a>
-        <a href="#" id="nav-link-about" class="nav-link">אודות</a>
+        <div id="desktop-nav-links">
+            <a href="#" id="nav-link-standard-game" class="nav-link active-nav">מסלול כל אוצר המילים</a>
+            <a href="#" id="nav-link-focused-game" class="nav-link">מסלול למידה ממוקד</a>
+            <a href="#" id="nav-link-leaderboard" class="nav-link">לוח שיאים</a>
+            <a href="#" id="nav-link-settings" class="nav-link">הגדרות</a>
+            <a href="#" id="nav-link-about" class="nav-link">אודות</a>
+        </div>
+        <button id="hamburger-button">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
     </nav>
+    <div id="mobile-nav-menu">
+        <a href="#" id="mobile-nav-link-standard-game" class="nav-link active-nav">מסלול כל אוצר המילים</a>
+        <a href="#" id="mobile-nav-link-focused-game" class="nav-link">מסלול למידה ממוקד</a>
+        <a href="#" id="mobile-nav-link-leaderboard" class="nav-link">לוח שיאים</a>
+        <a href="#" id="mobile-nav-link-settings" class="nav-link">הגדרות</a>
+        <a href="#" id="mobile-nav-link-about" class="nav-link">אודות</a>
+    </div>
+
 
     <audio src="assets/mp3/1.mp3" loop id="background-music"></audio>
     
@@ -571,6 +683,9 @@
         const navLinkLeaderboard = document.getElementById('nav-link-leaderboard'); 
         const navLinkSettings = document.getElementById('nav-link-settings'); 
         const navLinkAbout = document.getElementById('nav-link-about'); 
+        const hamburgerButton = document.getElementById('hamburger-button');
+        const mobileNavMenu = document.getElementById('mobile-nav-menu');
+        const mobileNavLinks = document.querySelectorAll('#mobile-nav-menu .nav-link');
 
 
         const letterGamePage = document.getElementById('letter-game-page');
@@ -606,7 +721,6 @@
         const backToGameButtonSettings = document.getElementById('back-to-game-button-settings');
         const backToGameButtonAbout = document.getElementById('back-to-game-button-about');
 
-        // const startFocusedLearningButton = document.getElementById('start-focused-learning-button'); // Removed from settings page
         const resetFocusedListButton = document.getElementById('reset-focused-list-button');
         const focusedWordsCountDisplay = document.getElementById('focused-words-count');
 
@@ -787,26 +901,30 @@
         function showPage(pageId) {
             document.querySelectorAll('main').forEach(page => page.classList.remove('active'));
             document.querySelectorAll('#global-nav .nav-link').forEach(link => link.classList.remove('active-nav'));
+            if (mobileNavMenu) mobileNavMenu.classList.remove('active'); // Close mobile menu on page change
+            if (hamburgerButton) hamburgerButton.classList.remove('open');
+
 
             const targetPage = document.getElementById(pageId);
             if (targetPage) targetPage.classList.add('active');
 
             const navLinkMapping = {
-                'letter-game-page': navLinkStandardGame, // Default to standard game link
-                'word-group-game-page': navLinkStandardGame, 
+                'letter-game-page': currentGameMode === 'focused' ? navLinkFocusedGame : navLinkStandardGame,
+                'word-group-game-page': currentGameMode === 'focused' ? navLinkFocusedGame : navLinkStandardGame, 
                 'leaderboard-page': navLinkLeaderboard,
                 'settings-page': navLinkSettings,
                 'about-page': navLinkAbout
             };
-            // Highlight correct game mode link
-            if (pageId === 'letter-game-page') {
-                if (currentGameMode === 'focused' && navLinkFocusedGame) {
-                    navLinkFocusedGame.classList.add('active-nav');
-                } else if (navLinkStandardGame) {
-                    navLinkStandardGame.classList.add('active-nav');
-                }
-            } else if (navLinkMapping[pageId]) {
+            
+            if (navLinkMapping[pageId] && navLinkMapping[pageId]) {
                  navLinkMapping[pageId].classList.add('active-nav');
+                 // Also update mobile nav active state
+                 const mobileEquivalentId = navLinkMapping[pageId].id.replace('nav-link-', 'mobile-nav-link-');
+                 const mobileActiveLink = document.getElementById(mobileEquivalentId);
+                 if (mobileActiveLink) {
+                     mobileNavLinks.forEach(ml => ml.classList.remove('active-nav'));
+                     mobileActiveLink.classList.add('active-nav');
+                 }
             }
             
             if (pageId === 'leaderboard-page') displayHighScores(); 
@@ -986,7 +1104,7 @@
             if (hiddenInput) hiddenInput.value = ''; 
             letterGame_listeningForInput = false; 
             waitingForKeyPressAfterReveal = false; 
-            // inputLockUntilNextInteraction is reset after the timeout below
+            inputLockUntilNextInteraction = true; // Lock input until explicitly unlocked after delay
 
             if (currentLetterGameWordIndex >= totalLetterGameWords) { 
                 handleOverallGameEnd(currentGameMode === 'focused' ? "כל הכבוד! סיימת את מסלול הלמידה הממוקד!" : "כל הכבוד! סיימת את כל המילים במשחק הניחוש!"); 
@@ -1030,7 +1148,7 @@
             
             setTimeout(() => { 
                 letterGame_listeningForInput = true; 
-                inputLockUntilNextInteraction = false; // Unlock input for the new word
+                inputLockUntilNextInteraction = false; 
                 updateLetterGameGuessArea(); 
                 updateLetterGameHintButtonState(); 
                 updateManualEndGameButtonVisibility();
@@ -1344,7 +1462,7 @@
         // --- SHARED GAME FLOW & UI ---
         function showMilestoneNotification(points) { 
             const pointsToShow = points % 1 === 0 ? points : points.toFixed(1);
-            milestoneNotification.textContent = `${pointsToShow} Points!!! �`;
+            milestoneNotification.textContent = `${pointsToShow} Points!!! 🎉`;
             milestoneNotification.classList.add('visible');
             setTimeout(() => milestoneNotification.classList.remove('visible'), 2500); 
         }
@@ -1552,7 +1670,7 @@
 
             incorrectWordsThisSession.forEach(word => newWordsToAdd.add(word));
 
-            for (let i = 0; i < FULL_WORD_LIST.length; i++) { // Iterate through the full original list
+            for (let i = 0; i < FULL_WORD_LIST.length; i++) { 
                 const wordObject = FULL_WORD_LIST[i];
                 if (!wordsPlayedThisSession.has(wordObject.word)) {
                     newWordsToAdd.add(wordObject.word);
@@ -1575,7 +1693,6 @@
             if (focusedWordsCountDisplay) {
                 focusedWordsCountDisplay.textContent = `יש כרגע ${focusedWords.length} מילים ברשימת הלמידה הממוקדת.`;
             }
-            // Update the nav link for focused learning
             if (navLinkFocusedGame) {
                 if (focusedWords.length === 0) {
                     navLinkFocusedGame.classList.add('disabled-nav-link');
@@ -1631,28 +1748,33 @@
         if (backToGameButtonAbout) {
             backToGameButtonAbout.addEventListener('click', () => initializeLetterGame(false, 'standard'));
         }
-        if(navLinkStandardGame) { // Changed ID
+
+        // Hamburger Menu Toggle
+        if (hamburgerButton && mobileNavMenu) {
+            hamburgerButton.addEventListener('click', () => {
+                hamburgerButton.classList.toggle('open');
+                mobileNavMenu.classList.toggle('active');
+            });
+        }
+
+        // Desktop Nav Links
+        if(navLinkStandardGame) { 
             navLinkStandardGame.addEventListener('click', (e) => {
                 e.preventDefault();
                 document.querySelectorAll('.overlay.visible').forEach(overlay => overlay.classList.remove('visible'));
-                
-                currentLetterGameWordIndex = 0; 
-                score = 0; 
-                lastCheckpointScore = 0;
+                currentLetterGameWordIndex = 0; score = 0; lastCheckpointScore = 0;
                 initializeLetterGame(false, 'standard'); 
             });
         }
         if(navLinkFocusedGame) {
             navLinkFocusedGame.addEventListener('click', (e) => {
                 e.preventDefault();
-                const focusedWords = loadFocusedLearningWords();
-                if (focusedWords.length === 0) {
-                    alert("רשימת הלמידה הממוקדת ריקה. נא שחק/י קודם 'מסלול כל אוצר המילים' כדי להוסיף מילים לרשימה, או אפשר/י איפוס דרך ההגדרות.");
+                if (navLinkFocusedGame.classList.contains('disabled-nav-link')) {
+                     alert("רשימת הלמידה הממוקדת ריקה. נא שחק/י קודם 'מסלול כל אוצר המילים' כדי להוסיף מילים לרשימה, או אפשר/י איפוס דרך ההגדרות.");
                     return;
                 }
                 document.querySelectorAll('.overlay.visible').forEach(overlay => overlay.classList.remove('visible'));
-                score = 0; 
-                lastCheckpointScore = 0;
+                score = 0; lastCheckpointScore = 0;
                 initializeLetterGame(false, 'focused');
             });
         }
@@ -1660,7 +1782,6 @@
             navLinkLeaderboard.addEventListener('click', (e) => {
                 e.preventDefault();
                 document.querySelectorAll('.overlay.visible').forEach(overlay => overlay.classList.remove('visible'));
-                displayHighScores();
                 showPage('leaderboard-page');
             });
         }
@@ -1679,6 +1800,40 @@
             });
         }
         
+        // Mobile Nav Links (attach to the new mobile link IDs)
+        document.getElementById('mobile-nav-link-standard-game').addEventListener('click', (e) => {
+            e.preventDefault();
+            document.querySelectorAll('.overlay.visible').forEach(overlay => overlay.classList.remove('visible'));
+            currentLetterGameWordIndex = 0; score = 0; lastCheckpointScore = 0;
+            initializeLetterGame(false, 'standard');
+        });
+        document.getElementById('mobile-nav-link-focused-game').addEventListener('click', (e) => {
+            e.preventDefault();
+            if (navLinkFocusedGame.classList.contains('disabled-nav-link')) { // Check original disabled state
+                 alert("רשימת הלמידה הממוקדת ריקה. נא שחק/י קודם 'מסלול כל אוצר המילים' כדי להוסיף מילים לרשימה, או אפשר/י איפוס דרך ההגדרות.");
+                return;
+            }
+            document.querySelectorAll('.overlay.visible').forEach(overlay => overlay.classList.remove('visible'));
+            score = 0; lastCheckpointScore = 0;
+            initializeLetterGame(false, 'focused');
+        });
+        document.getElementById('mobile-nav-link-leaderboard').addEventListener('click', (e) => {
+            e.preventDefault();
+            document.querySelectorAll('.overlay.visible').forEach(overlay => overlay.classList.remove('visible'));
+            showPage('leaderboard-page');
+        });
+         document.getElementById('mobile-nav-link-settings').addEventListener('click', (e) => {
+            e.preventDefault();
+            document.querySelectorAll('.overlay.visible').forEach(overlay => overlay.classList.remove('visible'));
+            showPage('settings-page');
+        });
+        document.getElementById('mobile-nav-link-about').addEventListener('click', (e) => {
+            e.preventDefault();
+            document.querySelectorAll('.overlay.visible').forEach(overlay => overlay.classList.remove('visible'));
+            showPage('about-page');
+        });
+
+
         if(resetFocusedListButton) {
             resetFocusedListButton.addEventListener('click', resetFocusedLearningList);
         }
@@ -1694,10 +1849,9 @@
             score = 0; 
             lastCheckpointScore = 0;
             initializeLetterGame(false, 'standard'); 
-            updateSettingsPageUI(); // Initial update for focused learning button state
+            updateSettingsPageUI(); 
         };
     </script>
 
 </body>
 </html>
-�
